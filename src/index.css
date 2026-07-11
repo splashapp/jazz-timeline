@@ -7,23 +7,29 @@
   --bg-ember: #4a2818;
   --gold: #c9a227;
   --gold-soft: #e0bd52;
+  --gold-deep: #8a6a1a;
   --amber: #e8794a;
   --cream: #f4ead9;
-  --muted: #a6947f;
+  --muted: #c9b294;
   --hit: #8bb572;
   --miss: #c1573f;
 
-  --glass-fill: rgba(244, 234, 217, 0.06);
-  --glass-fill-strong: rgba(244, 234, 217, 0.11);
-  --glass-border: rgba(244, 234, 217, 0.14);
+  /* Smoked-glass surfaces: real body (not near-transparent cream) so cards
+     separate from the background gradient instead of blending into it. */
+  --glass-fill: rgba(58, 38, 26, 0.55);
+  --glass-fill-strong: rgba(58, 38, 26, 0.8);
+  --glass-border: rgba(232, 199, 140, 0.22);
   --glass-blur: 18px;
 
   --shadow-soft: 0 8px 30px rgba(10, 6, 4, 0.45);
   --shadow-lift: 0 16px 48px rgba(10, 6, 4, 0.55);
 
+  /* Restrained serif for the two ceremonial moments (brand wordmark, the
+     big reveal year); everything else is a confident modern grotesk, with
+     a mono "readout" face for counters/tags — a turntable-counter nod. */
   --font-display: "Cinzel", "Iowan Old Style", serif;
-  --font-body: "Jost", system-ui, sans-serif;
-  --font-mono: "Oswald", ui-monospace, sans-serif;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
 
   font-family: var(--font-body);
 }

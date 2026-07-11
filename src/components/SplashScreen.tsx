@@ -10,13 +10,13 @@ interface Props {
 export function SplashScreen({ onSolo, onMultiplayer, mockMode, onToggleMock }: Props) {
   return (
     <div className="screen splash-screen">
-      <h1>Jazz Timeline</h1>
+      <h1 className="brand-title">Jazz Timeline</h1>
       <img className="splash-poster" src={posterImage} alt="Jazz Timeline poster" />
       <p className="splash-credit">by Alex Rueß</p>
       <button className="pill-btn primary splash-solo-btn" onClick={onSolo}>
         ▶ Play Solo
       </button>
-      <button className="link-btn" onClick={onMultiplayer}>
+      <button className="link-btn splash-multiplayer-link" onClick={onMultiplayer}>
         With Multiple Players →
       </button>
       {import.meta.env.DEV && (

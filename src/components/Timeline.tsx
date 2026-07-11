@@ -1,4 +1,5 @@
 import type { PlacedCard, Song } from "../types/game";
+import { genreColorStyle } from "../utils/genreColors";
 
 interface Props {
   timeline: PlacedCard[];
@@ -33,6 +34,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
                 <button
                   type="button"
                   className="timeline-card timeline-card-playable"
+                  style={genreColorStyle(timeline[i].song.genre)}
                   onClick={() => onCardClick(timeline[i].song)}
                   aria-label={`Play ${timeline[i].song.title} again`}
                 >
@@ -42,7 +44,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
                   <span className="card-play-icon">🔊</span>
                 </button>
               ) : (
-                <div className="timeline-card">
+                <div className="timeline-card" style={genreColorStyle(timeline[i].song.genre)}>
                   <div className="card-year">{timeline[i].song.year}</div>
                   <div className="card-title">{timeline[i].song.title}</div>
                   <div className="card-artist">{timeline[i].song.artist}</div>

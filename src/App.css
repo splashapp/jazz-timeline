@@ -15,7 +15,9 @@
   align-items: center;
   gap: 16px;
   text-align: center;
-  padding: 32px 20px 28px;
+  /* 8px grid; horizontal margin matches the card padding used elsewhere
+     (.turn-card-face, .guess-form) for one consistent app-wide edge. */
+  padding: 32px 24px;
   animation: fade-up 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -33,7 +35,7 @@
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   color: var(--cream);
   margin: 0;
   font-weight: 600;
@@ -42,13 +44,19 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(30px, 7vw, 42px);
-  font-optical-sizing: auto;
+  font-size: clamp(28px, 6.5vw, 38px);
 }
 
 h2 {
   font-size: 20px;
   font-weight: 500;
+}
+
+/* The one wordmark that gets the ceremonial serif treatment. */
+.brand-title {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 7vw, 42px);
+  font-optical-sizing: auto;
 }
 
 .subtitle {
@@ -61,11 +69,54 @@ h2 {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--gold-soft);
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
   border-radius: 999px;
   padding: 5px 12px;
+}
+
+/* Era/genre accent — filled with the genre's own color (not just an
+   outline) so it reads as the single most vivid label on the card, with
+   text color computed per-genre so pale fills (Swing, Free Jazz…) still
+   get dark, legible text instead of one color fighting half the palette.
+   Width is auto/fit-content (inline-flex default) and never wraps; on a
+   narrow card the font shrinks (clamp, max ~15%) as the safety valve
+   instead of breaking the pill onto two lines. */
+.eyebrow-tag.genre-accent {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+  font-size: clamp(19px, 7cqw, 22px);
+  padding: 10px 28px;
+  color: var(--genre-text, var(--bg-ink));
+  background: var(--genre-bg, var(--glass-fill));
+  border-color: transparent;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--genre-color, transparent) 45%, transparent);
+}
+
+/* Recolored via mask to --genre-text (the badge's own contrast-computed
+   ink color) instead of the icon's baked-in hue, which could be too close
+   to the badge fill's color to read (e.g. a gold icon on a gold badge).
+   Sized to match the doubled genre-accent badge — the mask scales with it,
+   so line weight grows proportionally instead of just the bounding box. */
+.genre-accent .genre-badge-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  background-color: var(--genre-text, var(--bg-ink));
+  -webkit-mask-image: var(--genre-icon);
+  mask-image: var(--genre-icon);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .hint {
@@ -93,25 +144,45 @@ button:disabled {
 }
 
 .pill-btn {
+  position: relative;
+  overflow: hidden;
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.2px;
   padding: 14px 30px;
   border-radius: 999px;
-  background: var(--glass-fill-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%), var(--glass-fill-strong);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--cream);
-  box-shadow: var(--shadow-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.25),
+    var(--shadow-soft);
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
 
+/* Sheen sweep on hover — a single pass, not a loop, so it reads as a
+   premium material response rather than an ambient animation. */
+.pill-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.pill-btn:hover:not(:disabled)::before {
+  transform: translateX(120%);
+}
+
 .pill-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.25),
+    var(--shadow-lift);
 }
 
 .pill-btn:active:not(:disabled) {
@@ -121,11 +192,14 @@ button:disabled {
 .pill-btn.primary {
   border-color: var(--gold);
   color: #241705;
-  background: linear-gradient(155deg, var(--gold-soft), var(--gold));
+  background: linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 55%, var(--gold-deep) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 6px rgba(0, 0, 0, 0.22),
+    var(--shadow-soft);
 }
 
 .pill-btn.primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-lift), 0 0 26px rgba(201, 162, 39, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 6px rgba(0, 0, 0, 0.22),
+    var(--shadow-lift), 0 0 26px rgba(201, 162, 39, 0.4);
 }
 
 .pill-btn:disabled {
@@ -134,14 +208,20 @@ button:disabled {
 
 /* ---------- splash ---------- */
 
+/* Explicit 8px-grid rhythm per pair, not a uniform gap: title→poster (48,
+   the poster is the hero and needs room), poster→credit (16, the credit
+   reads as part of the poster block), credit→button (32, content vs.
+   action), button→secondary link (16, same action group), link→rest (48+,
+   see .dev-mock-toggle). */
 .splash-screen {
   justify-content: center;
-  gap: 20px;
+  gap: 0;
 }
 
 .splash-poster {
   width: 100%;
   max-width: 360px;
+  margin-top: 48px;
   border-radius: 18px;
   box-shadow: var(--shadow-lift);
 }
@@ -150,13 +230,17 @@ button:disabled {
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 13px;
-  margin: 0;
+  margin: 16px 0 0;
 }
 
 .splash-solo-btn {
-  margin-top: 10px;
+  margin-top: 32px;
   font-size: 17px;
   padding: 16px 36px;
+}
+
+.splash-multiplayer-link {
+  margin-top: 16px;
 }
 
 /* ---------- understated secondary link ---------- */
@@ -178,7 +262,7 @@ button:disabled {
 }
 
 .dev-mock-toggle {
-  margin-top: 4px;
+  margin-top: 48px;
   font-family: var(--font-mono);
   font-size: 11px;
   opacity: 0.6;
@@ -300,7 +384,8 @@ button:disabled {
 }
 
 .turn-card-player {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 15px;
   color: var(--cream);
   white-space: nowrap;
@@ -332,9 +417,10 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #241a16;
+  background: radial-gradient(circle at 35% 30%, #342620, #1a120e 70%);
   border: 1px solid #4a3a2a;
-  box-shadow: var(--shadow-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    var(--shadow-soft);
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease;
 }
 
@@ -397,6 +483,11 @@ button:disabled {
   gap: 16px;
   padding: 28px 24px;
   overflow: hidden;
+  /* Lets the genre badge shrink relative to the card's own width (cqw)
+     rather than the viewport — it needs to respond to how much room the
+     306px-max card actually has, not how big the phone screen is. */
+  container-type: inline-size;
+  container-name: turn-card;
 }
 
 .turn-card-inner.is-flipped .front {
@@ -409,7 +500,10 @@ button:disabled {
 
 .turn-card-face.back {
   transform: rotateY(180deg);
-  background: var(--glass-fill-strong);
+  /* Subtle vignette instead of a flat fill: a soft lift top-left gives the
+     card presence against the page background rather than blending into
+     it, without brightening the --glass-fill-strong token used elsewhere. */
+  background: radial-gradient(circle at 32% 18%, rgba(82, 56, 39, 0.92), rgba(58, 38, 26, 0.86) 65%);
 }
 
 .turn-card-hint {
@@ -485,19 +579,38 @@ button:disabled {
   position: relative;
   background: repeating-radial-gradient(
       circle at center,
-      rgba(255, 255, 255, 0.05) 0,
-      rgba(255, 255, 255, 0.05) 1px,
+      rgba(255, 255, 255, 0.07) 0,
+      rgba(255, 255, 255, 0.07) 1px,
       transparent 1px,
-      transparent 13px
+      transparent 11px
     ),
-    radial-gradient(circle at 35% 30%, #2a221d 0%, #171110 45%, #0b0807 100%);
-  box-shadow: 0 0 0 6px rgba(244, 234, 217, 0.05), var(--shadow-lift), 0 14px 24px rgba(0, 0, 0, 0.4);
+    radial-gradient(circle at 32% 28%, #362b23 0%, #1c1512 35%, #0a0706 75%, #050403 100%);
+  box-shadow: 0 0 0 1px rgba(244, 234, 217, 0.09), 0 0 0 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 32px rgba(0, 0, 0, 0.55), var(--shadow-lift), 0 14px 24px rgba(0, 0, 0, 0.4);
   animation: spin 5.5s linear infinite;
   animation-play-state: paused;
 }
 
 .vinyl.spinning {
   animation-play-state: running;
+}
+
+/* Fixed highlight overlay — a sibling of .vinyl, not a child, so it does
+   NOT spin with the disc: light glinting off vinyl stays put while the
+   record turns underneath it, the way it reads in real photos. */
+.vinyl-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 22%,
+    rgba(255, 255, 255, 0.16) 42%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 62%
+  );
+  mix-blend-mode: screen;
 }
 
 .vinyl-label {
@@ -545,21 +658,29 @@ button:disabled {
 
 .reveal-year {
   font-family: var(--font-display);
-  font-size: clamp(52px, 16vw, 76px);
-  font-weight: 600;
+  font-size: clamp(64px, 20vw, 98px);
+  font-weight: 700;
   line-height: 1;
   color: var(--gold-soft);
+  text-shadow: 0 0 28px rgba(224, 189, 82, 0.35);
 }
 
-.reveal-title {
-  font-size: 19px;
+/* Artist is the dominant identity line now (bigger than the title): most
+   players recognize the performer before the exact track name. */
+.reveal-artist {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cream);
+  text-transform: none;
+  letter-spacing: 0;
   padding: 0 8px;
 }
 
-.reveal-artist {
+.reveal-title {
   color: var(--muted);
-  margin-top: -10px;
+  margin-top: -8px;
   font-size: 14px;
+  font-weight: 400;
 }
 
 .reveal-points {
@@ -579,16 +700,30 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   padding: 3px 2px;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid rgba(232, 199, 140, 0.32);
 }
 
-.reveal-points .hit {
+/* Label = secondary/dim, always — correctness lives on the value only, so
+   the two columns read as distinct information layers at a glance. */
+.reveal-points-label {
+  color: var(--muted);
+}
+
+/* Value defaults to bright cream (a guess was made); "empty" dims it back
+   down for the "—" no-guess placeholder, "hit" turns it green. */
+.reveal-points-value {
+  color: var(--cream);
+  font-weight: 600;
+}
+
+.reveal-points-value.hit {
   color: var(--hit);
 }
 
-.reveal-points .miss {
+.reveal-points-value.empty {
   color: var(--muted);
-  opacity: 0.7;
+  font-weight: 400;
+  opacity: 0.8;
 }
 
 .replay-tag {
@@ -676,11 +811,16 @@ button:disabled {
 }
 
 .timeline-card {
+  position: relative;
   flex: 0 0 auto;
   min-width: 108px;
   max-width: 128px;
-  background: var(--glass-fill-strong);
+  /* Genre reads through the accent border alone at this size — a lighter
+     background tint (was 16%) keeps the card body neutral so the border
+     actually pops instead of blending toward the same hue. */
+  background: linear-gradient(165deg, color-mix(in srgb, var(--genre-color, transparent) 8%, var(--glass-fill-strong)), var(--glass-fill-strong));
   border: 1px solid var(--glass-border);
+  border-left: 5px solid var(--genre-color, var(--glass-border));
   border-radius: 16px;
   padding: 10px 12px;
   backdrop-filter: blur(var(--glass-blur));
@@ -713,9 +853,9 @@ button:disabled {
 
 .card-year {
   font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--gold-soft);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--genre-color, var(--gold-soft));
 }
 
 .card-title {
@@ -727,8 +867,8 @@ button:disabled {
 }
 
 .card-artist {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -840,6 +980,7 @@ button:disabled {
 }
 
 .result-disc {
+  position: relative;
   width: clamp(140px, 40vw, 190px);
   height: clamp(140px, 40vw, 190px);
   margin: 4px 0;
@@ -851,7 +992,8 @@ button:disabled {
 }
 
 .winner {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 20px;
   color: var(--gold-soft);
 }

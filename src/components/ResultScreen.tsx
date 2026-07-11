@@ -19,6 +19,7 @@ export function ResultScreen({ state, onRestart }: Props) {
         <div className="vinyl">
           <span className="vinyl-label" />
         </div>
+        <div className="vinyl-sheen" />
       </div>
 
       {isSolo && winner && <p className="winner">You scored {winner.score} points!</p>}

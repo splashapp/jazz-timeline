@@ -1,4 +1,14 @@
 import type { Song, PlacedCard, TurnPhase } from "../types/game";
+import { genreColorStyle } from "../utils/genreColors";
+
+// Long artist credits (e.g. "Christian Scott aTunde Adjuah") wrap to two
+// lines; step the font down so that second line still fits comfortably
+// without pushing the title/button below the visible card area.
+function artistFontSize(name: string): string {
+  if (name.length > 26) return "18px";
+  if (name.length > 20) return "20px";
+  return "24px";
+}
 
 interface Props {
   turnPhase: TurnPhase;
@@ -90,6 +100,7 @@ export function TurnCard({
                 <span className="vinyl-label-text">JAZZ</span>
               </span>
             </div>
+            <div className="vinyl-sheen" />
           </div>
 
           {turnPhase === "ready" && (
@@ -131,33 +142,61 @@ export function TurnCard({
               return (
                 <>
                   {nowPlaying && <span className="eyebrow-tag replay-tag">🔊 Replaying</span>}
-                  <span className="eyebrow-tag">{displaySong.genre}</span>
                   <div className="reveal-year">{displaySong.year}</div>
-                  <h3 className="reveal-title">{displaySong.title}</h3>
-                  <p className="reveal-artist">{displaySong.artist}</p>
+                  <span className="eyebrow-tag genre-accent" style={genreColorStyle(displaySong.genre)}>
+                    <span className="genre-badge-icon" aria-hidden="true" />
+                    {displaySong.genre}
+                  </span>
+                  <h3 className="reveal-artist" style={{ fontSize: artistFontSize(displaySong.artist) }}>
+                    {displaySong.artist}
+                  </h3>
+                  <p className="reveal-title">{displaySong.title}</p>
 
-                  {!nowPlaying && placedCard && (
-                    <ul className="reveal-points">
-                      <li className={placedCard.correctPlacement ? "hit" : "miss"}>
-                        <span>Placement</span>
-                        <span>{placedCard.correctPlacement ? "+1" : "—"}</span>
-                      </li>
-                      <li className={placedCard.correctYear ? "hit" : "miss"}>
-                        <span>Exact Year</span>
-                        <span>{placedCard.yearGuess ?? "—"}</span>
-                      </li>
-                      <li className={placedCard.correctArtist ? "hit" : "miss"}>
-                        <span>Artist</span>
-                        <span>{placedCard.artistGuess.trim() || "—"}</span>
-                      </li>
-                      {placedCard.correctGenre !== null && (
-                        <li className={placedCard.correctGenre ? "hit" : "miss"}>
-                          <span>Genre</span>
-                          <span>{placedCard.genreGuess ?? "—"}</span>
-                        </li>
-                      )}
-                    </ul>
-                  )}
+                  {!nowPlaying &&
+                    placedCard &&
+                    (() => {
+                      const hasArtistGuess = placedCard.artistGuess.trim().length > 0;
+                      const valueClass = (hasValue: boolean, correct: boolean) =>
+                        correct ? "hit" : hasValue ? "filled" : "empty";
+                      return (
+                        <ul className="reveal-points">
+                          <li>
+                            <span className="reveal-points-label">Placement</span>
+                            <span
+                              className={`reveal-points-value ${placedCard.correctPlacement ? "hit" : "empty"}`}
+                            >
+                              {placedCard.correctPlacement ? "+1" : "—"}
+                            </span>
+                          </li>
+                          <li>
+                            <span className="reveal-points-label">Exact Year</span>
+                            <span
+                              className={`reveal-points-value ${valueClass(placedCard.yearGuess !== null, placedCard.correctYear)}`}
+                            >
+                              {placedCard.yearGuess ?? "—"}
+                            </span>
+                          </li>
+                          <li>
+                            <span className="reveal-points-label">Artist</span>
+                            <span
+                              className={`reveal-points-value ${valueClass(hasArtistGuess, placedCard.correctArtist)}`}
+                            >
+                              {hasArtistGuess ? placedCard.artistGuess.trim() : "—"}
+                            </span>
+                          </li>
+                          {placedCard.correctGenre !== null && (
+                            <li>
+                              <span className="reveal-points-label">Genre</span>
+                              <span
+                                className={`reveal-points-value ${valueClass(placedCard.genreGuess !== null, placedCard.correctGenre)}`}
+                              >
+                                {placedCard.genreGuess ?? "—"}
+                              </span>
+                            </li>
+                          )}
+                        </ul>
+                      );
+                    })()}
 
                   {nowPlaying && playbackBlocked && (
                     <button className="pill-btn primary" onClick={onManualPlay}>
