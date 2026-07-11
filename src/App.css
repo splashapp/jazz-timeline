@@ -177,6 +177,29 @@ button:disabled {
   text-decoration-color: currentColor;
 }
 
+.dev-mock-toggle {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.mock-badge {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold-soft);
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 4px 12px;
+  z-index: 20;
+}
+
 /* ---------- back button ---------- */
 
 .back-btn {

@@ -1,4 +1,4 @@
-export type MediaService = "youtube" | "spotify" | "apple";
+export type MediaService = "youtube" | "spotify" | "apple" | "mock";
 
 export type Genre =
   | "Ragtime"
@@ -46,6 +46,9 @@ export interface PlacedCard {
   correctYear: boolean;
   correctArtist: boolean;
   correctGenre: boolean | null;
+  yearGuess: number | null;
+  artistGuess: string;
+  genreGuess: Genre | null;
 }
 
 export interface Player {

@@ -144,16 +144,16 @@ export function TurnCard({
                       </li>
                       <li className={placedCard.correctYear ? "hit" : "miss"}>
                         <span>Exact Year</span>
-                        <span>{placedCard.correctYear ? "+1" : "—"}</span>
+                        <span>{placedCard.yearGuess ?? "—"}</span>
                       </li>
                       <li className={placedCard.correctArtist ? "hit" : "miss"}>
                         <span>Artist</span>
-                        <span>{placedCard.correctArtist ? "+1" : "—"}</span>
+                        <span>{placedCard.artistGuess.trim() || "—"}</span>
                       </li>
                       {placedCard.correctGenre !== null && (
                         <li className={placedCard.correctGenre ? "hit" : "miss"}>
                           <span>Genre</span>
-                          <span>{placedCard.correctGenre ? "+1" : "—"}</span>
+                          <span>{placedCard.genreGuess ?? "—"}</span>
                         </li>
                       )}
                     </ul>

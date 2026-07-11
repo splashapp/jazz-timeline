@@ -6,6 +6,7 @@ import { Timeline } from "./Timeline";
 import { GuessForm } from "./GuessForm";
 import { TurnCard } from "./TurnCard";
 import { YouTubeMusicService } from "../services/youtubeService";
+import { MockMusicService } from "../services/mockMusicService";
 import type { MusicService } from "../services/musicService";
 import { logVideoIdIssue } from "../utils/adminLog";
 
@@ -36,8 +37,14 @@ export function GameScreen({ state, dispatch }: Props) {
     videoCacheRef.current.get(song.id) ?? song.videoId;
 
   useEffect(() => {
-    if (state.mediaService === "youtube" && !serviceRef.current) {
-      const service = new YouTubeMusicService("youtube-player-container");
+    if (
+      (state.mediaService === "youtube" || state.mediaService === "mock") &&
+      !serviceRef.current
+    ) {
+      const service =
+        state.mediaService === "mock"
+          ? new MockMusicService()
+          : new YouTubeMusicService("youtube-player-container");
       service.onPlaybackBlocked(setPlaybackBlocked);
       service.onPlayStateChange(setIsPlaying);
       service.onPlaybackError(() => {
@@ -169,6 +176,7 @@ export function GameScreen({ state, dispatch }: Props) {
   return (
     <div className="screen game-screen">
       <div id="youtube-player-container" className="yt-hidden" />
+      {state.mediaService === "mock" && <span className="mock-badge">🧪 Mock mode</span>}
 
       <TurnCard
         turnPhase={state.turnPhase}

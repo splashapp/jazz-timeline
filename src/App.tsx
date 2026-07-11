@@ -12,6 +12,7 @@ const isDebugView = new URLSearchParams(window.location.search).has("debug");
 function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const [onboardingView, setOnboardingView] = useState<"start" | "multiplayer">("start");
+  const [mockMode, setMockMode] = useState(false);
 
   if (isDebugView) {
     return (
@@ -21,22 +22,22 @@ function App() {
     );
   }
 
+  const mediaService = mockMode ? "mock" : "youtube";
+
   return (
     <div className="app">
       {state.phase === "setup-media" && onboardingView === "start" && (
         <SplashScreen
-          onSolo={() =>
-            dispatch({ type: "START_GAME", mediaService: "youtube", playerNames: ["Player 1"] })
-          }
+          onSolo={() => dispatch({ type: "START_GAME", mediaService, playerNames: ["Player 1"] })}
           onMultiplayer={() => setOnboardingView("multiplayer")}
+          mockMode={mockMode}
+          onToggleMock={() => setMockMode((m) => !m)}
         />
       )}
       {state.phase === "setup-media" && onboardingView === "multiplayer" && (
         <PlayerSetupScreen
           onBack={() => setOnboardingView("start")}
-          onStart={(names) =>
-            dispatch({ type: "START_GAME", mediaService: "youtube", playerNames: names })
-          }
+          onStart={(names) => dispatch({ type: "START_GAME", mediaService, playerNames: names })}
         />
       )}
       {state.phase === "playing" && <GameScreen state={state} dispatch={dispatch} />}

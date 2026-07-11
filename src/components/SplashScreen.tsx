@@ -3,9 +3,11 @@ import posterImage from "../assets/jazz-poster.png";
 interface Props {
   onSolo: () => void;
   onMultiplayer: () => void;
+  mockMode: boolean;
+  onToggleMock: () => void;
 }
 
-export function SplashScreen({ onSolo, onMultiplayer }: Props) {
+export function SplashScreen({ onSolo, onMultiplayer, mockMode, onToggleMock }: Props) {
   return (
     <div className="screen splash-screen">
       <h1>Jazz Timeline</h1>
@@ -17,6 +19,11 @@ export function SplashScreen({ onSolo, onMultiplayer }: Props) {
       <button className="link-btn" onClick={onMultiplayer}>
         With Multiple Players →
       </button>
+      {import.meta.env.DEV && (
+        <button className="link-btn dev-mock-toggle" onClick={onToggleMock}>
+          🧪 Mock YouTube: {mockMode ? "ON" : "OFF"}
+        </button>
+      )}
     </div>
   );
 }

@@ -108,6 +108,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         correctYear,
         correctArtist,
         correctGenre,
+        yearGuess: action.yearGuess,
+        artistGuess: action.artistGuess,
+        genreGuess: action.genreGuess,
       };
 
       timeline.splice(index, 0, placed);
