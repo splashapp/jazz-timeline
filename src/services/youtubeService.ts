@@ -16,6 +16,7 @@ declare global {
           events?: {
             onReady?: () => void;
             onStateChange?: (event: { data: number }) => void;
+            onError?: () => void;
           };
         },
       ) => YouTubePlayer;
@@ -67,6 +68,7 @@ export class YouTubeMusicService implements MusicService {
   private blockedCb: ((blocked: boolean) => void) | null = null;
   private blockedTimer: number | null = null;
   private playStateCb: ((isPlaying: boolean) => void) | null = null;
+  private errorCb: (() => void) | null = null;
 
   constructor(containerId: string) {
     this.containerId = containerId;
@@ -78,6 +80,14 @@ export class YouTubeMusicService implements MusicService {
 
   onPlayStateChange(cb: (isPlaying: boolean) => void): void {
     this.playStateCb = cb;
+  }
+
+  // Fires when the currently loaded video can't be played (removed, made
+  // private, embedding disabled, etc). A stored videoId in songs.json can go
+  // stale like this over time, so callers use this to fall back to a fresh
+  // search for the same song.
+  onPlaybackError(cb: () => void): void {
+    this.errorCb = cb;
   }
 
   private clearBlockedTimer(): void {
@@ -107,6 +117,7 @@ export class YouTubeMusicService implements MusicService {
           events: {
             onReady: () => resolve(),
             onStateChange: (event) => this.handleStateChange(event.data),
+            onError: () => this.errorCb?.(),
           },
         });
       });

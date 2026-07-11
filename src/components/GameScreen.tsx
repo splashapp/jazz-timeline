@@ -7,6 +7,7 @@ import { GuessForm } from "./GuessForm";
 import { TurnCard } from "./TurnCard";
 import { YouTubeMusicService } from "../services/youtubeService";
 import type { MusicService } from "../services/musicService";
+import { logVideoIdIssue } from "../utils/adminLog";
 
 interface Props {
   state: GameState;
@@ -17,17 +18,38 @@ export function GameScreen({ state, dispatch }: Props) {
   const serviceRef = useRef<MusicService | null>(null);
   const videoCacheRef = useRef<Map<string, string>>(new Map());
   const preparedRef = useRef<{ song: Song; videoId: string } | null>(null);
+  // Tracks whichever song the player was just asked to play, so that if
+  // playback errors out (e.g. a stored videoId has gone stale — video
+  // removed, made private, etc.) we know what to re-search for.
+  const lastAttemptRef = useRef<Song | null>(null);
+  const retriedSongIdsRef = useRef<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Cache first: if a stale stored videoId ever needed a live-search
+  // replacement this session, the cache holds the working one, and it
+  // should win over the (broken) static id on any later replay.
+  const getKnownVideoId = (song: Song): string | undefined =>
+    videoCacheRef.current.get(song.id) ?? song.videoId;
+
   useEffect(() => {
     if (state.mediaService === "youtube" && !serviceRef.current) {
       const service = new YouTubeMusicService("youtube-player-container");
       service.onPlaybackBlocked(setPlaybackBlocked);
       service.onPlayStateChange(setIsPlaying);
+      service.onPlaybackError(() => {
+        const song = lastAttemptRef.current;
+        if (!song || retriedSongIdsRef.current.has(song.id)) return;
+        retriedSongIdsRef.current.add(song.id);
+        logVideoIdIssue(song, "stale");
+        serviceRef.current
+          ?.loadAndPlay(song)
+          .then((videoId) => videoCacheRef.current.set(song.id, videoId))
+          .catch((e: Error) => setError(e.message));
+      });
       serviceRef.current = service;
     }
   }, [state.mediaService]);
@@ -43,7 +65,7 @@ export function GameScreen({ state, dispatch }: Props) {
     // Songs ship with a pre-resolved videoId (see scripts/resolve-video-ids.mjs)
     // so most turns never need a live search.list call at all — that endpoint
     // is capped at 100 requests/day on the free API tier.
-    const known = song.videoId ?? videoCacheRef.current.get(song.id);
+    const known = getKnownVideoId(song);
     if (known) {
       preparedRef.current = { song, videoId: known };
       return;
@@ -78,13 +100,16 @@ export function GameScreen({ state, dispatch }: Props) {
     dispatch({ type: "DRAW_SONG", song });
     if (!song) return;
 
-    const knownId = prepared?.videoId ?? song.videoId ?? videoCacheRef.current.get(song.id);
+    const knownId = prepared?.videoId ?? getKnownVideoId(song);
     if (knownId) {
       setLoading(false);
       videoCacheRef.current.set(song.id, knownId);
+      lastAttemptRef.current = song;
       serviceRef.current?.playVideoId(knownId);
     } else {
       setLoading(true);
+      lastAttemptRef.current = song;
+      logVideoIdIssue(song, "missing");
       serviceRef.current
         ?.loadAndPlay(song)
         .then((videoId) => videoCacheRef.current.set(song.id, videoId))
@@ -100,10 +125,12 @@ export function GameScreen({ state, dispatch }: Props) {
     setError(null);
     setPlaybackBlocked(false);
     setNowPlaying(song);
-    const knownId = song.videoId ?? videoCacheRef.current.get(song.id);
+    lastAttemptRef.current = song;
+    const knownId = getKnownVideoId(song);
     if (knownId) {
       serviceRef.current?.playVideoId(knownId);
     } else {
+      logVideoIdIssue(song, "missing");
       serviceRef.current
         ?.loadAndPlay(song)
         .then((videoId) => videoCacheRef.current.set(song.id, videoId))

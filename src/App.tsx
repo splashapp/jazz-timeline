@@ -4,11 +4,22 @@ import { SplashScreen } from "./components/SplashScreen";
 import { PlayerSetupScreen } from "./components/PlayerSetupScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
+import { DebugPanel } from "./components/DebugPanel";
 import "./App.css";
+
+const isDebugView = new URLSearchParams(window.location.search).has("debug");
 
 function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const [onboardingView, setOnboardingView] = useState<"start" | "multiplayer">("start");
+
+  if (isDebugView) {
+    return (
+      <div className="app">
+        <DebugPanel />
+      </div>
+    );
+  }
 
   return (
     <div className="app">
