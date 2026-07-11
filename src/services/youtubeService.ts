@@ -26,6 +26,7 @@ declare global {
 interface YouTubePlayer {
   loadVideoById(videoId: string): void;
   playVideo(): void;
+  pauseVideo(): void;
   stopVideo(): void;
 }
 
@@ -65,6 +66,7 @@ export class YouTubeMusicService implements MusicService {
   private initPromise: Promise<void> | null = null;
   private blockedCb: ((blocked: boolean) => void) | null = null;
   private blockedTimer: number | null = null;
+  private playStateCb: ((isPlaying: boolean) => void) | null = null;
 
   constructor(containerId: string) {
     this.containerId = containerId;
@@ -72,6 +74,10 @@ export class YouTubeMusicService implements MusicService {
 
   onPlaybackBlocked(cb: (blocked: boolean) => void): void {
     this.blockedCb = cb;
+  }
+
+  onPlayStateChange(cb: (isPlaying: boolean) => void): void {
+    this.playStateCb = cb;
   }
 
   private clearBlockedTimer(): void {
@@ -82,6 +88,7 @@ export class YouTubeMusicService implements MusicService {
   }
 
   private handleStateChange(state: number): void {
+    this.playStateCb?.(state === YT_STATE_PLAYING);
     if (state === YT_STATE_PLAYING) {
       this.clearBlockedTimer();
       this.blockedCb?.(false);
@@ -157,9 +164,14 @@ export class YouTubeMusicService implements MusicService {
     this.player?.playVideo();
   }
 
+  pause(): void {
+    this.player?.pauseVideo();
+  }
+
   stop(): void {
     this.clearBlockedTimer();
     this.blockedCb?.(false);
+    this.playStateCb?.(false);
     this.player?.stopVideo();
   }
 }

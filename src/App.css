@@ -293,6 +293,57 @@ button:disabled {
   white-space: nowrap;
 }
 
+.turn-card-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.play-pause-btn {
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #241a16;
+  border: 1px solid #4a3a2a;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease;
+}
+
+.play-pause-btn:hover {
+  border-color: var(--gold);
+}
+
+.play-pause-btn:active {
+  transform: scale(0.92);
+}
+
+.play-pause-btn .icon-bars {
+  display: flex;
+  gap: 4px;
+}
+
+.play-pause-btn .icon-bars span {
+  width: 4px;
+  height: 14px;
+  border-radius: 1px;
+  background: #e8c766;
+}
+
+.play-pause-btn .icon-triangle {
+  width: 0;
+  height: 0;
+  margin-left: 3px;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 12px solid #e8c766;
+}
+
 .turn-card-inner {
   position: relative;
   width: 100%;
@@ -360,32 +411,48 @@ button:disabled {
 
 .tonearm {
   position: absolute;
-  top: -16px;
-  right: -20px;
-  width: 82px;
-  height: 5px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--gold-soft), var(--muted));
-  transform-origin: 90% 40%;
-  transform: rotate(-40deg);
+  top: -14px;
+  right: -30px;
+  width: 40px;
+  height: 100px;
+  transform-origin: 50% 6%;
+  transform: rotate(0deg);
   transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: var(--shadow-soft);
   z-index: 2;
+  filter: drop-shadow(0 3px 4px rgba(10, 6, 4, 0.5));
 }
 
 .tonearm.dropped {
-  transform: rotate(-12deg);
+  transform: rotate(20deg);
+}
+
+.tonearm-arm {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tonearm-pivot {
+  position: absolute;
+  left: 12px;
+  top: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 70%);
+  box-shadow: 0 0 0 4px #241a16, 0 0 0 5px #4a3a2a, 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .tonearm-head {
   position: absolute;
-  left: -3px;
-  top: -3px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 8px rgba(232, 121, 74, 0.7);
+  left: 12px;
+  top: 89px;
+  width: 15px;
+  height: 9px;
+  border-radius: 2px;
+  transform: rotate(70deg);
+  background: linear-gradient(155deg, var(--gold-soft), var(--gold));
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.6);
 }
 
 .vinyl {
@@ -394,13 +461,14 @@ button:disabled {
   border-radius: 50%;
   position: relative;
   background: repeating-radial-gradient(
-    circle at center,
-    #0e0a08 0,
-    #0e0a08 2px,
-    #1e1512 2px,
-    #1e1512 4px
-  );
-  box-shadow: 0 0 0 6px rgba(244, 234, 217, 0.05), var(--shadow-soft);
+      circle at center,
+      rgba(255, 255, 255, 0.05) 0,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 13px
+    ),
+    radial-gradient(circle at 35% 30%, #2a221d 0%, #171110 45%, #0b0807 100%);
+  box-shadow: 0 0 0 6px rgba(244, 234, 217, 0.05), var(--shadow-lift), 0 14px 24px rgba(0, 0, 0, 0.4);
   animation: spin 5.5s linear infinite;
   animation-play-state: paused;
 }
@@ -413,16 +481,35 @@ button:disabled {
   position: absolute;
   inset: 38%;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--gold-soft), var(--gold) 65%, #7a5c12 100%);
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  background: linear-gradient(155deg, #e8c766, #c99a2e);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.vinyl-label-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: clamp(8px, 4.2vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--bg-ink);
+  white-space: nowrap;
 }
 
 .vinyl-label::after {
   content: "";
   position: absolute;
-  inset: 42%;
+  top: 50%;
+  left: 50%;
+  width: 14%;
+  height: 14%;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   background: var(--bg-ink);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 @keyframes spin {

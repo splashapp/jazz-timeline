@@ -21,11 +21,13 @@ export function GameScreen({ state, dispatch }: Props) {
   const [loading, setLoading] = useState(false);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<Song | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (state.mediaService === "youtube" && !serviceRef.current) {
       const service = new YouTubeMusicService("youtube-player-container");
       service.onPlaybackBlocked(setPlaybackBlocked);
+      service.onPlayStateChange(setIsPlaying);
       serviceRef.current = service;
     }
   }, [state.mediaService]);
@@ -109,6 +111,14 @@ export function GameScreen({ state, dispatch }: Props) {
     setPlaybackBlocked(false);
   };
 
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      serviceRef.current?.pause();
+    } else {
+      serviceRef.current?.play();
+    }
+  };
+
   const handleNext = () => {
     serviceRef.current?.stop();
     setNowPlaying(null);
@@ -136,7 +146,9 @@ export function GameScreen({ state, dispatch }: Props) {
         error={error}
         playbackBlocked={playbackBlocked}
         nowPlaying={nowPlaying}
+        isPlaying={isPlaying}
         onManualPlay={handleManualPlay}
+        onTogglePlay={handleTogglePlay}
         onPlay={handlePlay}
         onNext={handleNext}
         nextLabel={isSolo ? "Next" : "Next Player"}

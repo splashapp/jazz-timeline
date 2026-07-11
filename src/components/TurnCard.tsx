@@ -8,7 +8,9 @@ interface Props {
   error: string | null;
   playbackBlocked: boolean;
   nowPlaying: Song | null;
+  isPlaying: boolean;
   onManualPlay: () => void;
+  onTogglePlay: () => void;
   onPlay: () => void;
   onNext: () => void;
   nextLabel: string;
@@ -24,7 +26,9 @@ export function TurnCard({
   error,
   playbackBlocked,
   nowPlaying,
+  isPlaying,
   onManualPlay,
+  onTogglePlay,
   onPlay,
   onNext,
   nextLabel,
@@ -38,16 +42,53 @@ export function TurnCard({
     <div className="turn-card">
       <div className="turn-card-topbar">
         <span className="turn-card-player">{playerName}</span>
-        <span className="turn-card-round">{roundLabel}</span>
+        <div className="turn-card-topbar-right">
+          <span className="turn-card-round">{roundLabel}</span>
+          {currentSong && (
+            <button
+              type="button"
+              className="play-pause-btn"
+              onClick={onTogglePlay}
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <span className="icon-bars">
+                  <span />
+                  <span />
+                </span>
+              ) : (
+                <span className="icon-triangle" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
       <div className={`turn-card-inner${flipped ? " is-flipped" : ""}`}>
         <div className="turn-card-face front">
           <div className="vinyl-rig">
             <div className={`tonearm${spinning ? " dropped" : ""}`}>
+              <svg className="tonearm-arm" viewBox="0 0 40 100" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="tonearmGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#e8d9b0" />
+                    <stop offset="100%" stopColor="#a88c55" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M20,6 C6,25 6,70 20,94"
+                  fill="none"
+                  stroke="url(#tonearmGradient)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="tonearm-pivot" />
               <span className="tonearm-head" />
             </div>
             <div className={`vinyl${spinning ? " spinning" : ""}`}>
-              <span className="vinyl-label" />
+              <span className="vinyl-label">
+                <span className="vinyl-label-text">JAZZ</span>
+              </span>
             </div>
           </div>
 

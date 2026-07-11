@@ -6,6 +6,8 @@ export interface MusicService {
   playVideoId(videoId: string): void;
   loadAndPlay(song: Song): Promise<string>;
   play(): void;
+  pause(): void;
   stop(): void;
   onPlaybackBlocked(cb: (blocked: boolean) => void): void;
+  onPlayStateChange(cb: (isPlaying: boolean) => void): void;
 }
