@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { GameState } from "../types/game";
+import type { GameState, Song } from "../types/game";
 import type { GameAction } from "../state/gameReducer";
+import { pickRandomSong } from "../state/gameReducer";
 import { Timeline } from "./Timeline";
 import { GuessForm } from "./GuessForm";
 import { TurnCard } from "./TurnCard";
@@ -14,9 +15,12 @@ interface Props {
 
 export function GameScreen({ state, dispatch }: Props) {
   const serviceRef = useRef<MusicService | null>(null);
+  const videoCacheRef = useRef<Map<string, string>>(new Map());
+  const preparedRef = useRef<{ song: Song; videoId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState<Song | null>(null);
 
   useEffect(() => {
     if (state.mediaService === "youtube" && !serviceRef.current) {
@@ -26,29 +30,86 @@ export function GameScreen({ state, dispatch }: Props) {
     }
   }, [state.mediaService]);
 
+  // Prefetch the next song's video id while the card is idle, so the actual
+  // "Song abspielen" tap can call playVideoId() synchronously (required for
+  // autoplay on iOS Safari) instead of waiting on a network search first.
   useEffect(() => {
-    if (state.turnPhase !== "listening" || !state.currentSong || !serviceRef.current) return;
+    if (state.turnPhase !== "ready" || !serviceRef.current) return;
+    preparedRef.current = null;
+    const song = pickRandomSong(state.usedSongIds);
+    if (!song) return;
+    const cached = videoCacheRef.current.get(song.id);
+    if (cached) {
+      preparedRef.current = { song, videoId: cached };
+      return;
+    }
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setPlaybackBlocked(false);
     serviceRef.current
-      .loadAndPlay(state.currentSong)
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
+      .init()
+      .then(() => serviceRef.current!.resolveVideoId(song.searchQuery))
+      .then((videoId) => {
+        if (cancelled || !videoId) return;
+        videoCacheRef.current.set(song.id, videoId);
+        preparedRef.current = { song, videoId };
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+      .catch(() => {
+        // Ignore prefetch failures; the actual play click falls back to the
+        // regular async loadAndPlay path and surfaces errors there.
       });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.turnPhase, state.currentSong]);
+  }, [state.turnPhase, state.usedSongIds]);
+
+  useEffect(() => {
+    if (state.turnPhase !== "revealed") setNowPlaying(null);
+  }, [state.turnPhase]);
+
+  const handlePlay = () => {
+    const prepared = preparedRef.current;
+    const song = prepared?.song ?? pickRandomSong(state.usedSongIds);
+    setError(null);
+    setPlaybackBlocked(false);
+    dispatch({ type: "DRAW_SONG", song });
+    if (!song) return;
+
+    if (prepared) {
+      setLoading(false);
+      serviceRef.current?.playVideoId(prepared.videoId);
+    } else {
+      setLoading(true);
+      serviceRef.current
+        ?.loadAndPlay(song)
+        .then((videoId) => videoCacheRef.current.set(song.id, videoId))
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const handleReplay = (song: Song) => {
+    setError(null);
+    setPlaybackBlocked(false);
+    setNowPlaying(song);
+    const cached = videoCacheRef.current.get(song.id);
+    if (cached) {
+      serviceRef.current?.playVideoId(cached);
+    } else {
+      serviceRef.current
+        ?.loadAndPlay(song)
+        .then((videoId) => videoCacheRef.current.set(song.id, videoId))
+        .catch((e: Error) => setError(e.message));
+    }
+  };
 
   const handleManualPlay = () => {
     serviceRef.current?.play();
     setPlaybackBlocked(false);
+  };
+
+  const handleNext = () => {
+    serviceRef.current?.stop();
+    setNowPlaying(null);
+    dispatch({ type: "NEXT_TURN" });
   };
 
   const currentPlayer = state.players[state.currentPlayerIndex];
@@ -71,9 +132,10 @@ export function GameScreen({ state, dispatch }: Props) {
         loading={loading}
         error={error}
         playbackBlocked={playbackBlocked}
+        nowPlaying={nowPlaying}
         onManualPlay={handleManualPlay}
-        onPlay={() => dispatch({ type: "DRAW_SONG" })}
-        onNext={() => dispatch({ type: "NEXT_TURN" })}
+        onPlay={handlePlay}
+        onNext={handleNext}
         nextLabel={isSolo ? "Weiter" : "Nächster Spieler"}
         playerName={isSolo ? currentPlayer.name : `${currentPlayer.name} ist dran`}
         roundLabel={`Karte ${currentPlayer.timeline.length + 1} / ${state.roundsPerPlayer}`}
@@ -87,7 +149,11 @@ export function GameScreen({ state, dispatch }: Props) {
             onPlace={(index) => dispatch({ type: "PLACE_CARD", index })}
           />
         ) : (
-          <Timeline timeline={currentPlayer.timeline} placementMode={false} />
+          <Timeline
+            timeline={currentPlayer.timeline}
+            placementMode={false}
+            onCardClick={state.turnPhase === "revealed" ? handleReplay : undefined}
+          />
         )}
       </div>
 

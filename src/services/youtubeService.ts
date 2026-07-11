@@ -107,7 +107,7 @@ export class YouTubeMusicService implements MusicService {
     return this.initPromise;
   }
 
-  private async searchVideoId(query: string): Promise<string | null> {
+  async resolveVideoId(query: string): Promise<string | null> {
     if (!API_KEY) {
       throw new Error(
         "Kein YouTube API-Key konfiguriert. Bitte VITE_YOUTUBE_API_KEY in der .env-Datei setzen (siehe README).",
@@ -129,12 +129,11 @@ export class YouTubeMusicService implements MusicService {
     return data.items?.[0]?.id?.videoId ?? null;
   }
 
-  async loadAndPlay(song: Song): Promise<void> {
-    await this.init();
-    const videoId = await this.searchVideoId(song.searchQuery);
-    if (!videoId || !this.player) {
-      throw new Error(`Kein YouTube-Video für "${song.searchQuery}" gefunden.`);
-    }
+  // Synchronous on purpose: this must be callable directly from a click
+  // handler (no awaits before it) so iOS Safari treats it as a genuine
+  // user-gesture-triggered play, e.g. for a cached/prefetched video id.
+  playVideoId(videoId: string): void {
+    if (!this.player) return;
     this.player.loadVideoById(videoId);
     this.player.playVideo();
 
@@ -142,6 +141,16 @@ export class YouTubeMusicService implements MusicService {
     this.blockedTimer = window.setTimeout(() => {
       this.blockedCb?.(true);
     }, PLAYBACK_BLOCKED_TIMEOUT_MS);
+  }
+
+  async loadAndPlay(song: Song): Promise<string> {
+    await this.init();
+    const videoId = await this.resolveVideoId(song.searchQuery);
+    if (!videoId) {
+      throw new Error(`Kein YouTube-Video für "${song.searchQuery}" gefunden.`);
+    }
+    this.playVideoId(videoId);
+    return videoId;
   }
 
   play(): void {

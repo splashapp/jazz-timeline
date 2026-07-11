@@ -7,6 +7,7 @@ interface Props {
   loading: boolean;
   error: string | null;
   playbackBlocked: boolean;
+  nowPlaying: Song | null;
   onManualPlay: () => void;
   onPlay: () => void;
   onNext: () => void;
@@ -22,6 +23,7 @@ export function TurnCard({
   loading,
   error,
   playbackBlocked,
+  nowPlaying,
   onManualPlay,
   onPlay,
   onNext,
@@ -110,6 +112,19 @@ export function TurnCard({
                     </li>
                   )}
                 </ul>
+              )}
+
+              {nowPlaying && (
+                <div className="turn-card-replay">
+                  <p className="turn-card-hint">
+                    🔊 {nowPlaying.title} – {nowPlaying.artist}
+                  </p>
+                  {playbackBlocked && (
+                    <button className="pill-btn primary" onClick={onManualPlay}>
+                      🔊 Ton abspielen
+                    </button>
+                  )}
+                </div>
               )}
 
               <button className="pill-btn primary" onClick={onNext}>

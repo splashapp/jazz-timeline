@@ -22,13 +22,13 @@ export type GameAction =
   | { type: "SELECT_MEDIA"; service: MediaService }
   | { type: "SET_GENRE_FEATURE"; enabled: boolean }
   | { type: "START_GAME"; playerNames: string[] }
-  | { type: "DRAW_SONG" }
+  | { type: "DRAW_SONG"; song: Song | null }
   | { type: "PLACE_CARD"; index: number }
   | { type: "REVEAL"; yearGuess: number | null; artistGuess: string; genreGuess: Genre | null }
   | { type: "NEXT_TURN" }
   | { type: "RESET" };
 
-function pickRandomSong(usedIds: string[]): Song | null {
+export function pickRandomSong(usedIds: string[]): Song | null {
   const available = ALL_SONGS.filter((s) => !usedIds.includes(s.id));
   if (available.length === 0) return null;
   return available[Math.floor(Math.random() * available.length)];
@@ -77,7 +77,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case "DRAW_SONG": {
-      const song = pickRandomSong(state.usedSongIds);
+      const song = action.song;
       if (!song) {
         return { ...state, phase: "finished" };
       }
