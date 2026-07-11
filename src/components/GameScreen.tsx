@@ -87,6 +87,9 @@ export function GameScreen({ state, dispatch }: Props) {
   };
 
   const handleReplay = (song: Song) => {
+    // Stop whatever is currently playing first so a slow/failed load for the
+    // clicked song can never be mistaken for "the old song kept playing".
+    serviceRef.current?.stop();
     setError(null);
     setPlaybackBlocked(false);
     setNowPlaying(song);

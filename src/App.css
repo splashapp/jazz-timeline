@@ -481,11 +481,9 @@ button:disabled {
   opacity: 0.7;
 }
 
-.turn-card-replay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+.replay-tag {
+  color: var(--gold-soft);
+  border-color: var(--gold);
 }
 
 /* ---------- timeline (bottom horizontal scroll-snap) ---------- */

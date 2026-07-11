@@ -84,54 +84,52 @@ export function TurnCard({
         </div>
 
         <div className="turn-card-face back">
-          {currentSong && (
-            <>
-              <span className="eyebrow-tag">{currentSong.genre}</span>
-              <div className="reveal-year">{currentSong.year}</div>
-              <h3 className="reveal-title">{currentSong.title}</h3>
-              <p className="reveal-artist">{currentSong.artist}</p>
+          {currentSong &&
+            (() => {
+              const displaySong = nowPlaying ?? currentSong;
+              return (
+                <>
+                  {nowPlaying && <span className="eyebrow-tag replay-tag">🔊 Replaying</span>}
+                  <span className="eyebrow-tag">{displaySong.genre}</span>
+                  <div className="reveal-year">{displaySong.year}</div>
+                  <h3 className="reveal-title">{displaySong.title}</h3>
+                  <p className="reveal-artist">{displaySong.artist}</p>
 
-              {placedCard && (
-                <ul className="reveal-points">
-                  <li className={placedCard.correctPlacement ? "hit" : "miss"}>
-                    <span>Placement</span>
-                    <span>{placedCard.correctPlacement ? "+1" : "—"}</span>
-                  </li>
-                  <li className={placedCard.correctYear ? "hit" : "miss"}>
-                    <span>Exact Year</span>
-                    <span>{placedCard.correctYear ? "+1" : "—"}</span>
-                  </li>
-                  <li className={placedCard.correctArtist ? "hit" : "miss"}>
-                    <span>Artist</span>
-                    <span>{placedCard.correctArtist ? "+1" : "—"}</span>
-                  </li>
-                  {placedCard.correctGenre !== null && (
-                    <li className={placedCard.correctGenre ? "hit" : "miss"}>
-                      <span>Genre</span>
-                      <span>{placedCard.correctGenre ? "+1" : "—"}</span>
-                    </li>
+                  {!nowPlaying && placedCard && (
+                    <ul className="reveal-points">
+                      <li className={placedCard.correctPlacement ? "hit" : "miss"}>
+                        <span>Placement</span>
+                        <span>{placedCard.correctPlacement ? "+1" : "—"}</span>
+                      </li>
+                      <li className={placedCard.correctYear ? "hit" : "miss"}>
+                        <span>Exact Year</span>
+                        <span>{placedCard.correctYear ? "+1" : "—"}</span>
+                      </li>
+                      <li className={placedCard.correctArtist ? "hit" : "miss"}>
+                        <span>Artist</span>
+                        <span>{placedCard.correctArtist ? "+1" : "—"}</span>
+                      </li>
+                      {placedCard.correctGenre !== null && (
+                        <li className={placedCard.correctGenre ? "hit" : "miss"}>
+                          <span>Genre</span>
+                          <span>{placedCard.correctGenre ? "+1" : "—"}</span>
+                        </li>
+                      )}
+                    </ul>
                   )}
-                </ul>
-              )}
 
-              {nowPlaying && (
-                <div className="turn-card-replay">
-                  <p className="turn-card-hint">
-                    🔊 {nowPlaying.title} – {nowPlaying.artist}
-                  </p>
-                  {playbackBlocked && (
+                  {nowPlaying && playbackBlocked && (
                     <button className="pill-btn primary" onClick={onManualPlay}>
                       🔊 Play Sound
                     </button>
                   )}
-                </div>
-              )}
 
-              <button className="pill-btn primary" onClick={onNext}>
-                {nextLabel}
-              </button>
-            </>
-          )}
+                  <button className="pill-btn primary" onClick={onNext}>
+                    {nextLabel}
+                  </button>
+                </>
+              );
+            })()}
         </div>
       </div>
     </div>
