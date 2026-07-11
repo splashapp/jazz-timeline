@@ -6,6 +6,8 @@ interface Props {
   placedCard: PlacedCard | undefined;
   loading: boolean;
   error: string | null;
+  playbackBlocked: boolean;
+  onManualPlay: () => void;
   onPlay: () => void;
   onNext: () => void;
   nextLabel: string;
@@ -19,6 +21,8 @@ export function TurnCard({
   placedCard,
   loading,
   error,
+  playbackBlocked,
+  onManualPlay,
   onPlay,
   onNext,
   nextLabel,
@@ -58,7 +62,15 @@ export function TurnCard({
             <>
               {loading && <p className="turn-card-hint">Lade Song …</p>}
               {error && <p className="turn-card-error">{error}</p>}
-              {!loading && !error && (
+              {!loading && !error && playbackBlocked && (
+                <>
+                  <p className="turn-card-hint">Autoplay blockiert</p>
+                  <button className="pill-btn primary" onClick={onManualPlay}>
+                    🔊 Ton abspielen
+                  </button>
+                </>
+              )}
+              {!loading && !error && !playbackBlocked && (
                 <p className="turn-card-hint">Song läuft — ordne ihn unten ein</p>
               )}
             </>

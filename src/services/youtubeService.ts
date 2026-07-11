@@ -13,7 +13,10 @@ declare global {
           height: string;
           width: string;
           playerVars?: Record<string, number>;
-          events?: { onReady?: () => void };
+          events?: {
+            onReady?: () => void;
+            onStateChange?: (event: { data: number }) => void;
+          };
         },
       ) => YouTubePlayer;
     };
@@ -25,6 +28,15 @@ interface YouTubePlayer {
   playVideo(): void;
   stopVideo(): void;
 }
+
+const YT_STATE_PLAYING = 1;
+
+// iOS Safari blocks autoplay unless playVideo() is triggered directly by a
+// user gesture. Because loadAndPlay() awaits a network search first, the
+// gesture context is lost by the time playVideo() runs, so playback silently
+// fails to start. This timeout detects that case so the UI can offer a
+// manual "tap to play" fallback that calls play() synchronously.
+const PLAYBACK_BLOCKED_TIMEOUT_MS = 1200;
 
 let apiLoadPromise: Promise<void> | null = null;
 
@@ -51,9 +63,29 @@ export class YouTubeMusicService implements MusicService {
   private player: YouTubePlayer | null = null;
   private containerId: string;
   private initPromise: Promise<void> | null = null;
+  private blockedCb: ((blocked: boolean) => void) | null = null;
+  private blockedTimer: number | null = null;
 
   constructor(containerId: string) {
     this.containerId = containerId;
+  }
+
+  onPlaybackBlocked(cb: (blocked: boolean) => void): void {
+    this.blockedCb = cb;
+  }
+
+  private clearBlockedTimer(): void {
+    if (this.blockedTimer !== null) {
+      window.clearTimeout(this.blockedTimer);
+      this.blockedTimer = null;
+    }
+  }
+
+  private handleStateChange(state: number): void {
+    if (state === YT_STATE_PLAYING) {
+      this.clearBlockedTimer();
+      this.blockedCb?.(false);
+    }
   }
 
   init(): Promise<void> {
@@ -64,8 +96,11 @@ export class YouTubeMusicService implements MusicService {
         this.player = new window.YT!.Player(this.containerId, {
           height: "0",
           width: "0",
-          playerVars: { autoplay: 0, controls: 0 },
-          events: { onReady: () => resolve() },
+          playerVars: { autoplay: 0, controls: 0, playsinline: 1 },
+          events: {
+            onReady: () => resolve(),
+            onStateChange: (event) => this.handleStateChange(event.data),
+          },
         });
       });
     })();
@@ -102,9 +137,20 @@ export class YouTubeMusicService implements MusicService {
     }
     this.player.loadVideoById(videoId);
     this.player.playVideo();
+
+    this.clearBlockedTimer();
+    this.blockedTimer = window.setTimeout(() => {
+      this.blockedCb?.(true);
+    }, PLAYBACK_BLOCKED_TIMEOUT_MS);
+  }
+
+  play(): void {
+    this.player?.playVideo();
   }
 
   stop(): void {
+    this.clearBlockedTimer();
+    this.blockedCb?.(false);
     this.player?.stopVideo();
   }
 }

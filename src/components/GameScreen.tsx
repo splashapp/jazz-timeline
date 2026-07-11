@@ -16,10 +16,13 @@ export function GameScreen({ state, dispatch }: Props) {
   const serviceRef = useRef<MusicService | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
 
   useEffect(() => {
     if (state.mediaService === "youtube" && !serviceRef.current) {
-      serviceRef.current = new YouTubeMusicService("youtube-player-container");
+      const service = new YouTubeMusicService("youtube-player-container");
+      service.onPlaybackBlocked(setPlaybackBlocked);
+      serviceRef.current = service;
     }
   }, [state.mediaService]);
 
@@ -28,6 +31,7 @@ export function GameScreen({ state, dispatch }: Props) {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setPlaybackBlocked(false);
     serviceRef.current
       .loadAndPlay(state.currentSong)
       .catch((e: Error) => {
@@ -41,6 +45,11 @@ export function GameScreen({ state, dispatch }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.turnPhase, state.currentSong]);
+
+  const handleManualPlay = () => {
+    serviceRef.current?.play();
+    setPlaybackBlocked(false);
+  };
 
   const currentPlayer = state.players[state.currentPlayerIndex];
   if (!currentPlayer) return null;
@@ -61,6 +70,8 @@ export function GameScreen({ state, dispatch }: Props) {
         placedCard={placedCard}
         loading={loading}
         error={error}
+        playbackBlocked={playbackBlocked}
+        onManualPlay={handleManualPlay}
         onPlay={() => dispatch({ type: "DRAW_SONG" })}
         onNext={() => dispatch({ type: "NEXT_TURN" })}
         nextLabel={isSolo ? "Weiter" : "Nächster Spieler"}
