@@ -1,93 +1,90 @@
-# Jazz Timeline — Spezifikation
+# Jazz Timeline — Specification
 
-Ein Browser-basiertes Musik-Ratespiel nach dem Vorbild des Brettspiels **Hitster**, thematisch auf Jazz fokussiert. Gespielt wird an einem gemeinsamen Gerät (Pass-and-Play), keine Accounts, kein Server nötig.
+A browser-based music guessing game inspired by the board game **Hitster**, themed around jazz. Played on a single shared device (pass-and-play), no accounts, no server required.
 
-## 1. Ziel & Spielprinzip
+## 1. Goal & Game Concept
 
-Jeder Spieler baut über das Spiel hinweg seine **eigene, persönliche Timeline** aus Songkarten auf. In jeder Runde hört der aktive Spieler einen Song (Titel/Interpret zunächst verborgen) und muss ihn chronologisch korrekt in seine eigene Timeline einsortieren. Danach kann er optional zusätzliche Punkte durch genaues Rateb von Erscheinungsjahr, Interpret/Komponist (Nachname) und Genre sammeln. Das Spiel endet, wenn jeder Spieler 10 Karten gesammelt hat. Wer die meisten Punkte hat, gewinnt.
+Over the course of the game, each player builds their own **personal timeline** of song cards. On each turn, the active player listens to a song (title/artist hidden at first) and must place it chronologically correctly into their own timeline. They can then optionally earn bonus points by guessing the exact release year, the artist's/composer's last name, and the genre. The game ends once every player has collected 10 cards. Whoever has the most points wins.
 
-## 2. Spielablauf
+## 2. Game Flow
 
-### 2.1 Schritt 1 — Medienauswahl (Startbildschirm)
-Beim Start wählt die Gruppe, mit welchem Musikdienst gespielt wird:
-- **YouTube** (aktiv, v1)
-- **Spotify** (Button sichtbar, aber als „bald verfügbar" markiert/deaktiviert)
-- **Apple Music** (Button sichtbar, aber als „bald verfügbar" markiert/deaktiviert)
+### 2.1 Step 1 — Splash Screen
+On launch, the app shows a full-screen poster (title "Jazz Timeline" above the artwork, "by Alex Rueß" below it). It automatically advances to player setup after 5 seconds, or immediately on tap/click anywhere on the screen.
 
-> **Warum nur YouTube in v1:** Spotify Web Playback erfordert einen Premium-Account und einen OAuth-Login-Flow, Apple Music erfordert ein kostenpflichtiges Apple Developer Programm (99 $/Jahr) plus MusicKit-Token. YouTube benötigt lediglich einen kostenlosen Data-API-Key und funktioniert ohne Abo. Die Architektur ist so gebaut (Adapter-Pattern, siehe 6.3), dass Spotify/Apple Music später ergänzt werden können, ohne den Rest der App anzufassen.
+There is no music-service selection — the game always uses **YouTube** for playback (`mediaService` is fixed to `"youtube"` internally).
 
-Die Auswahl wird im Spielzustand gespeichert (`mediaService: "youtube" | "spotify" | "apple"`).
+> **Why only YouTube:** Spotify Web Playback requires a Premium account and an OAuth login flow; Apple Music requires a paid Apple Developer Program membership ($99/year) plus a MusicKit token. YouTube only needs a free Data API key and works without a subscription. The architecture uses an adapter pattern (see 6.3) so Spotify/Apple Music could be added later without touching the rest of the app.
 
-### 2.2 Schritt 2 — Spieler-Setup
-- Auswahl der Spieleranzahl (1–8 Spieler, auch Solo-Spiel möglich)
-- Eingabe der Spielernamen
-- Weiter zum Spielstart
+### 2.2 Step 2 — Player Setup
+- Choose the number of players (1–8; solo play is possible) via tappable count chips — no typing required
+- Enter player names
+- Continue to start the game
 
-### 2.3 Schritt 3 — Spielrunde (pro Zug)
-1. Anzeige: „Spieler X ist dran"
-2. Button „Song abspielen" → zufälliger, noch nicht verwendeter Song wird über den gewählten Dienst geladen und abgespielt. Titel/Interpret/Jahr/Genre bleiben verborgen.
-3. Spieler platziert die neue Karte in seiner **eigenen** Timeline: Auswahl der Position relativ zu bereits platzierten Karten (z. B. „vor 1962er Karte" / „zwischen 1955 und 1962" / „nach neuester Karte"). Bei der ersten Karte gibt es keine Vorgabe.
-4. Optionale Zusatz-Eingaben vor der Auflösung:
-   - Exaktes Erscheinungsjahr (Zahlenfeld)
-   - Nachname des Interpreten/Komponisten (Textfeld)
-   - Genre (Auswahl aus fester Liste, siehe 3.3) — **optionales Feature**, per Einstellung ab-/anschaltbar
-5. Auflösung: Song-Infos (Titel, Interpret, Jahr, Genre) werden aufgedeckt, Punkte werden nach den Regeln in Abschnitt 3 berechnet und der Karte in der Timeline dauerhaft hinzugefügt (unabhängig davon, ob die Platzierung richtig war — es gibt in dieser Variante kein Verwerfen von Karten, siehe 3.1).
-6. „Nächster Spieler" → Zug geht reihum weiter.
+### 2.3 Step 3 — Turn Loop (per turn)
+1. Display: "It's Player X's turn"
+2. "Play Song" button → a random, not-yet-used song is loaded and played via YouTube. Title/artist/year/genre stay hidden.
+3. The player places the new card into their **own** timeline: choosing a position relative to already-placed cards (e.g. "before the 1962 card" / "between 1955 and 1962" / "after the newest card"). The first card has no prior constraint.
+4. Optional bonus guesses before reveal:
+   - Exact release year (number field)
+   - Artist's/composer's last name (text field)
+   - Genre (choice from a fixed list, see 3.3) — **optional feature**, can be toggled on/off in settings
+5. Reveal: song info (title, artist, year, genre) is uncovered, points are calculated per the rules in section 3, and the card is permanently added to the timeline (regardless of whether the placement was correct — in this variant cards are never discarded, see 3.1). After a reveal, any already-placed card in the timeline can be tapped to replay its song while the "Next" button stays available.
+6. "Next Player" → turn passes to the next player.
 
-Das Spiel endet, sobald jeder Spieler 10 Karten in seiner Timeline hat.
+The game ends once every player has 10 cards in their timeline.
 
-### 2.4 Schritt 4 — Endstand
-Anzeige aller Spieler mit Gesamtpunktzahl, sortiert absteigend, Gewinner hervorgehoben.
+### 2.4 Step 4 — Final Results
+Shows all players with their total score, sorted descending, winner highlighted.
 
-## 3. Punkteregeln
+## 3. Scoring Rules
 
-Pro Karte/Zug sind folgende Punkte erzielbar:
+The following points can be earned per card/turn:
 
-| Aktion | Punkte |
+| Action | Points |
 |---|---|
-| Karte chronologisch korrekt in die eigene Timeline einsortiert | **1** |
-| Exaktes Erscheinungsjahr korrekt erraten | **+1** |
-| Nachname Interpret/Komponist korrekt erraten (case-insensitive, einfacher String-Vergleich) | **+1** |
-| Genre korrekt erraten (nur wenn Feature aktiviert) | **+1** |
+| Card placed chronologically correctly in the player's own timeline | **1** |
+| Exact release year guessed correctly | **+1** |
+| Artist's/composer's last name guessed correctly (case-insensitive, simple string comparison) | **+1** |
+| Genre guessed correctly (only if the feature is enabled) | **+1** |
 
-Maximal 3 Punkte pro Karte (4, wenn Genre-Feature aktiviert ist).
+Maximum of 3 points per card (4 if the genre feature is enabled).
 
-### 3.1 Chronologische Korrektheit
-Eine Platzierung ist korrekt, wenn das Erscheinungsjahr des neuen Songs zwischen den Jahren der direkten Nachbarkarten an der gewählten Position liegt (bzw. vor der ersten/nach der letzten Karte, wenn an den Rand platziert). Die Karte wird **immer** der Timeline hinzugefügt (an der vom Spieler gewählten Position wird sie einsortiert; bei falscher Platzierung wird sie nach der Auflösung automatisch an die chronologisch richtige Stelle "korrigiert", damit die Timeline für Folgeentscheidungen weiterhin konsistent nutzbar bleibt) — es werden nur Punkte vergeben oder nicht.
+### 3.1 Chronological Correctness
+A placement is correct if the new song's release year falls between the years of the cards directly neighboring the chosen position (or before the first / after the last card, if placed at an edge). The card is **always** added to the timeline (it's inserted at the position the player chose; if the placement was wrong, it's automatically "corrected" to its chronologically right spot after the reveal, so the timeline stays consistent for future decisions) — only whether points are awarded depends on correctness.
 
-### 3.2 Interpret/Komponist-Nachname
-Freitext-Eingabe, Vergleich gegen `artistLastName` aus dem Song-Datensatz (Kleinschreibung, getrimmt). Bei mehreren Interpreten reicht der Nachname eines beteiligten Interpreten.
+### 3.2 Artist/Composer Last Name
+Free-text input, compared against `artistLastName` from the song record (lowercased, trimmed). For songs with multiple artists, the last name of any one of them is accepted.
 
-### 3.3 Genre-Liste (optionales Feature)
-Falls aktiviert, wählt der Spieler eines der folgenden Genres:
+### 3.3 Genre List (optional feature)
+If enabled, the player picks one of the following genres:
 
 `Ragtime, New Orleans, Chicago, Swing, Bebop, Cool Jazz, Vocal Jazz, Hard Bop, Modal Jazz, Free Jazz, Fusion, Modern Jazz`
 
-Jeder Song im Datensatz hat genau ein zugeordnetes Genre aus dieser Liste.
+Every song in the dataset has exactly one genre assigned from this list.
 
-## 4. Datenmodell
+## 4. Data Model
 
 ### 4.1 Song
 ```ts
 interface Song {
   id: string;
   title: string;
-  artist: string;          // vollständiger Anzeigename, z.B. "Louis Armstrong"
-  artistLastName: string;  // Vergleichswert für die Ratefunktion, z.B. "armstrong"
-  year: number;             // Erscheinungsjahr der Aufnahme/Veröffentlichung
-  genre: Genre;              // eines der 12 Genres aus 3.3
-  searchQuery: string;      // Query für die YouTube-Suche, z.B. "Louis Armstrong What a Wonderful World"
+  artist: string;          // full display name, e.g. "Louis Armstrong"
+  artistLastName: string;  // comparison value for the guessing feature, e.g. "armstrong"
+  year: number;             // release year of the recording/release
+  genre: Genre;              // one of the 12 genres from 3.3
+  searchQuery: string;      // query used for the YouTube search, e.g. "Louis Armstrong What a Wonderful World"
 }
 ```
 
-Ein kuratierter Datensatz mit ca. 60–80 bekannten Jazz-Aufnahmen liegt der App bei (`src/data/songs.json`), verteilt über alle Genres und Jahrzehnte (1920er bis 2010er), damit auch bei mehreren Spielern und 10 Runden genug Songs ohne Wiederholung zur Verfügung stehen (Minimum: Spieleranzahl × 10 unterschiedliche Songs).
+A curated dataset of roughly 60–80 well-known jazz recordings ships with the app (`src/data/songs.json`), spread across all genres and decades (1920s to 2010s), so that even with multiple players and 10 rounds there are enough songs without repeats (minimum: number of players × 10 distinct songs).
 
-### 4.2 Spielzustand
+### 4.2 Game State
 ```ts
 interface Player {
   id: string;
   name: string;
-  timeline: PlacedCard[];   // chronologisch sortiert
+  timeline: PlacedCard[];   // sorted chronologically
   score: number;
 }
 
@@ -96,7 +93,7 @@ interface PlacedCard {
   correctPlacement: boolean;
   correctYear: boolean;
   correctArtist: boolean;
-  correctGenre: boolean | null; // null wenn Feature deaktiviert
+  correctGenre: boolean | null; // null if the feature is disabled
 }
 
 interface GameState {
@@ -105,49 +102,50 @@ interface GameState {
   players: Player[];
   currentPlayerIndex: number;
   usedSongIds: string[];
-  roundsPerPlayer: number; // fix 10
+  roundsPerPlayer: number; // fixed at 10
   phase: "setup-media" | "setup-players" | "playing" | "finished";
 }
 ```
 
-## 5. Tech-Stack
+## 5. Tech Stack
 
-- **React + TypeScript + Vite** — Single-Page-App, kein Backend nötig
-- **State:** React State/Context, Persistenz optional via `localStorage` (Spiel kann bei Reload fortgesetzt werden)
-- **Styling:** einfaches, eigenständiges CSS (keine externen UI-Kits nötig)
-- **YouTube-Integration:**
-  - YouTube Data API v3 (`search.list`) zum Finden eines passenden Videos anhand `searchQuery`
-  - YouTube IFrame Player API zur Wiedergabe
-  - Erfordert einen kostenlosen Google-API-Key (`VITE_YOUTUBE_API_KEY` in `.env`), vom Nutzer selbst über die Google Cloud Console zu erstellen (YouTube Data API v3 aktivieren)
-- **Deployment:** statisches Hosting (z. B. Vercel, Netlify, GitHub Pages) — kein Server nötig, da alles clientseitig läuft
+- **React + TypeScript + Vite** — single-page app, no backend required
+- **State:** React state/context, persistence optional via `localStorage` (game can resume after a reload)
+- **Styling:** plain, self-contained CSS (no external UI kits needed)
+- **YouTube integration:**
+  - YouTube Data API v3 (`search.list`) to find a matching video from `searchQuery`
+  - YouTube IFrame Player API for playback
+  - Requires a free Google API key (`VITE_YOUTUBE_API_KEY` in `.env`), created by the user via the Google Cloud Console (enable YouTube Data API v3)
+- **Deployment:** static hosting (e.g. Vercel, Netlify, GitHub Pages) — no server needed since everything runs client-side
 
-## 6. Architektur-Hinweise
+## 6. Architecture Notes
 
-### 6.1 Ordnerstruktur (Vorschlag)
+### 6.1 Folder Structure (proposed)
 ```
 src/
   data/songs.json
   types/game.ts
   state/gameReducer.ts
-  services/musicService.ts      # Adapter-Interface
-  services/youtubeService.ts    # YouTube-Implementierung
-  components/MediaSelectScreen.tsx
+  services/musicService.ts      # adapter interface
+  services/youtubeService.ts    # YouTube implementation
+  components/SplashScreen.tsx
   components/PlayerSetupScreen.tsx
   components/GameScreen.tsx
+  components/TurnCard.tsx
   components/Timeline.tsx
   components/GuessForm.tsx
   components/ResultScreen.tsx
   App.tsx
 ```
 
-### 6.2 Song-Auswahl pro Zug
-Zufällige Auswahl eines Songs aus `songs.json`, dessen `id` noch nicht in `usedSongIds` enthalten ist.
+### 6.2 Song Selection per Turn
+Random selection of a song from `songs.json` whose `id` is not yet in `usedSongIds`.
 
-### 6.3 Adapter-Pattern für Musikdienste
-`musicService.ts` definiert ein Interface (`loadAndPlay(song): Promise<void>`, `stop(): void`), das `youtubeService.ts` implementiert. Spotify/Apple Music können später als weitere Implementierungen dieses Interfaces ergänzt werden, ohne Game-Logik oder UI anzufassen.
+### 6.3 Adapter Pattern for Music Services
+`musicService.ts` defines an interface (`loadAndPlay(song): Promise<string>`, `stop(): void`, etc.) that `youtubeService.ts` implements. Spotify/Apple Music could later be added as further implementations of this interface without touching game logic or UI.
 
-## 7. Nicht in v1 enthalten (bewusst zurückgestellt)
-- Spotify- und Apple-Music-Wiedergabe (Buttons vorhanden, aber deaktiviert)
-- Mehrgeräte-/Online-Multiplayer (nur Pass-and-Play an einem Gerät)
-- Kartenverlust bei falscher Platzierung (Hitster-Original-Regel) — hier: immer nur Punkte, keine verlorenen Karten
-- Nutzerkonten, Highscore-Speicherung serverseitig
+## 7. Not Included in v1 (deliberately deferred)
+- Spotify and Apple Music playback (adapter interface supports it, but no implementation ships)
+- Multi-device/online multiplayer (pass-and-play on one device only)
+- Losing a card on incorrect placement (the original Hitster rule) — here: points only, no cards are ever lost
+- User accounts, server-side high-score storage

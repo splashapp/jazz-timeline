@@ -110,7 +110,7 @@ export class YouTubeMusicService implements MusicService {
   async resolveVideoId(query: string): Promise<string | null> {
     if (!API_KEY) {
       throw new Error(
-        "Kein YouTube API-Key konfiguriert. Bitte VITE_YOUTUBE_API_KEY in der .env-Datei setzen (siehe README).",
+        "No YouTube API key configured. Please set VITE_YOUTUBE_API_KEY in the .env file (see README).",
       );
     }
     const url = new URL("https://www.googleapis.com/youtube/v3/search");
@@ -123,7 +123,7 @@ export class YouTubeMusicService implements MusicService {
 
     const res = await fetch(url.toString());
     if (!res.ok) {
-      throw new Error(`YouTube-Suche fehlgeschlagen (Status ${res.status}).`);
+      throw new Error(`YouTube search failed (status ${res.status}).`);
     }
     const data = await res.json();
     return data.items?.[0]?.id?.videoId ?? null;
@@ -147,7 +147,7 @@ export class YouTubeMusicService implements MusicService {
     await this.init();
     const videoId = await this.resolveVideoId(song.searchQuery);
     if (!videoId) {
-      throw new Error(`Kein YouTube-Video für "${song.searchQuery}" gefunden.`);
+      throw new Error(`No YouTube video found for "${song.searchQuery}".`);
     }
     this.playVideoId(videoId);
     return videoId;

@@ -21,9 +21,9 @@
   --shadow-soft: 0 8px 30px rgba(10, 6, 4, 0.45);
   --shadow-lift: 0 16px 48px rgba(10, 6, 4, 0.55);
 
-  --font-display: "Fraunces", "Iowan Old Style", serif;
-  --font-body: "Manrope", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Cinzel", "Iowan Old Style", serif;
+  --font-body: "Jost", system-ui, sans-serif;
+  --font-mono: "Oswald", ui-monospace, sans-serif;
 
   font-family: var(--font-body);
 }

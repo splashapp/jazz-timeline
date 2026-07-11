@@ -31,7 +31,7 @@ export function GameScreen({ state, dispatch }: Props) {
   }, [state.mediaService]);
 
   // Prefetch the next song's video id while the card is idle, so the actual
-  // "Song abspielen" tap can call playVideoId() synchronously (required for
+  // "Play Song" tap can call playVideoId() synchronously (required for
   // autoplay on iOS Safari) instead of waiting on a network search first.
   useEffect(() => {
     if (state.turnPhase !== "ready" || !serviceRef.current) return;
@@ -136,9 +136,9 @@ export function GameScreen({ state, dispatch }: Props) {
         onManualPlay={handleManualPlay}
         onPlay={handlePlay}
         onNext={handleNext}
-        nextLabel={isSolo ? "Weiter" : "Nächster Spieler"}
-        playerName={isSolo ? currentPlayer.name : `${currentPlayer.name} ist dran`}
-        roundLabel={`Karte ${currentPlayer.timeline.length + 1} / ${state.roundsPerPlayer}`}
+        nextLabel={isSolo ? "Next" : "Next Player"}
+        playerName={isSolo ? currentPlayer.name : `${currentPlayer.name}'s turn`}
+        roundLabel={`Card ${currentPlayer.timeline.length + 1} / ${state.roundsPerPlayer}`}
       />
 
       <div className="timeline-dock">
@@ -159,9 +159,9 @@ export function GameScreen({ state, dispatch }: Props) {
 
       {isSolo ? (
         <p className="score-line">
-          Punktestand:{" "}
+          Score:{" "}
           <span key={currentPlayer.score} className="score-pop">
-            {currentPlayer.score} Pkt
+            {currentPlayer.score} pts
           </span>
         </p>
       ) : (
@@ -170,7 +170,7 @@ export function GameScreen({ state, dispatch }: Props) {
             <div key={p.id} className={p.id === currentPlayer.id ? "score-item active" : "score-item"}>
               <span>{p.name}</span>
               <span key={p.score} className="score-pop">
-                {p.score} Pkt
+                {p.score} pts
               </span>
             </div>
           ))}

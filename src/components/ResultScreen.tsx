@@ -12,8 +12,8 @@ export function ResultScreen({ state, onRestart }: Props) {
 
   return (
     <div className="screen result-screen">
-      <span className="eyebrow-tag">Aufgelegt</span>
-      <h1>Spiel beendet</h1>
+      <span className="eyebrow-tag">Spun</span>
+      <h1>Game Over</h1>
 
       <div className="result-disc">
         <div className="vinyl">
@@ -21,22 +21,22 @@ export function ResultScreen({ state, onRestart }: Props) {
         </div>
       </div>
 
-      {isSolo && winner && <p className="winner">Du hast {winner.score} Punkte erzielt!</p>}
+      {isSolo && winner && <p className="winner">You scored {winner.score} points!</p>}
       {!isSolo && winner && (
-        <p className="winner">🏆 {winner.name} gewinnt mit {winner.score} Punkten!</p>
+        <p className="winner">🏆 {winner.name} wins with {winner.score} points!</p>
       )}
       {!isSolo && (
         <ol className="final-scores">
           {sorted.map((p) => (
             <li key={p.id}>
               <span>{p.name}</span>
-              <span>{p.score} Punkte</span>
+              <span>{p.score} points</span>
             </li>
           ))}
         </ol>
       )}
       <button className="pill-btn primary" onClick={onRestart}>
-        Neues Spiel
+        New Game
       </button>
     </div>
   );

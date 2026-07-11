@@ -11,7 +11,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
   const slots = timeline.length + 1;
 
   if (timeline.length === 0 && !placementMode) {
-    return <p className="empty-timeline">Noch keine Karten platziert.</p>;
+    return <p className="empty-timeline">No cards placed yet.</p>;
   }
 
   return (
@@ -23,7 +23,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
               <button
                 className="insert-chip"
                 onClick={() => onPlace?.(i)}
-                aria-label="Hier einordnen"
+                aria-label="Place here"
               >
                 +
               </button>
@@ -34,7 +34,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
                   type="button"
                   className="timeline-card timeline-card-playable"
                   onClick={() => onCardClick(timeline[i].song)}
-                  aria-label={`${timeline[i].song.title} erneut abspielen`}
+                  aria-label={`Play ${timeline[i].song.title} again`}
                 >
                   <div className="card-year">{timeline[i].song.year}</div>
                   <div className="card-title">{timeline[i].song.title}</div>

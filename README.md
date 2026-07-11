@@ -1,37 +1,37 @@
 # Jazz Timeline
 
-Ein browserbasiertes Musik-Ratespiel nach dem Vorbild von **Hitster**, fokussiert auf Jazz. Details zum Spielprinzip und den Regeln stehen in [SPEC.md](./SPEC.md).
+A browser-based music guessing game inspired by **Hitster**, focused on jazz. Details on gameplay and rules are in [SPEC.md](./SPEC.md).
 
 ## Setup
 
-1. Abhängigkeiten installieren:
+1. Install dependencies:
    ```bash
    npm install
    ```
-2. YouTube Data API v3 Key erstellen (kostenlos):
-   - [Google Cloud Console](https://console.cloud.google.com/) → neues Projekt anlegen
-   - "APIs & Services" → "Bibliothek" → **YouTube Data API v3** aktivieren
-   - "Anmeldedaten" → "API-Schlüssel erstellen"
-3. `.env.example` nach `.env` kopieren und den Key eintragen:
+2. Create a YouTube Data API v3 key (free):
+   - [Google Cloud Console](https://console.cloud.google.com/) → create a new project
+   - "APIs & Services" → "Library" → enable **YouTube Data API v3**
+   - "Credentials" → "Create API Key"
+3. Copy `.env.example` to `.env` and add your key:
    ```bash
    cp .env.example .env
    ```
    ```
-   VITE_YOUTUBE_API_KEY=dein-api-key
+   VITE_YOUTUBE_API_KEY=your-api-key
    ```
-4. Dev-Server starten:
+4. Start the dev server:
    ```bash
    npm run dev
    ```
 
-## Spielen
+## Playing
 
-Ein Gerät wird zwischen den Spielern herumgereicht (Pass-and-Play). Ablauf:
+One device is passed around between players (pass-and-play). Flow:
 
-1. Musikdienst wählen (aktuell nur YouTube verfügbar)
-2. Spieleranzahl und Namen eingeben
-3. Reihum: Song abspielen, in die eigene Timeline einordnen, optional Jahr/Interpret/Genre erraten
-4. Nach 10 Karten pro Spieler gewinnt, wer die meisten Punkte hat
+1. Splash screen with the poster, then straight into player setup
+2. Enter number of players and names
+3. Take turns: play a song, place it in your own timeline, optionally guess year/artist/genre
+4. After 10 cards per player, whoever has the most points wins
 
 ## Build
 

@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 import { gameReducer, createInitialState } from "./state/gameReducer";
-import { MediaSelectScreen } from "./components/MediaSelectScreen";
+import { SplashScreen } from "./components/SplashScreen";
 import { PlayerSetupScreen } from "./components/PlayerSetupScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
@@ -12,7 +12,7 @@ function App() {
   return (
     <div className="app">
       {state.phase === "setup-media" && (
-        <MediaSelectScreen onSelect={(service) => dispatch({ type: "SELECT_MEDIA", service })} />
+        <SplashScreen onStart={() => dispatch({ type: "SELECT_MEDIA", service: "youtube" })} />
       )}
       {state.phase === "setup-players" && (
         <PlayerSetupScreen onStart={(names) => dispatch({ type: "START_GAME", playerNames: names })} />

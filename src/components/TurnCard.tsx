@@ -53,33 +53,33 @@ export function TurnCard({
 
           {turnPhase === "ready" && (
             <>
-              <p className="turn-card-hint">Leg die Nadel auf</p>
+              <p className="turn-card-hint">Drop the needle</p>
               <button className="pill-btn primary" onClick={onPlay}>
-                Song abspielen
+                Play Song
               </button>
             </>
           )}
 
           {turnPhase === "listening" && (
             <>
-              {loading && <p className="turn-card-hint">Lade Song …</p>}
+              {loading && <p className="turn-card-hint">Loading song …</p>}
               {error && <p className="turn-card-error">{error}</p>}
               {!loading && !error && playbackBlocked && (
                 <>
-                  <p className="turn-card-hint">Autoplay blockiert</p>
+                  <p className="turn-card-hint">Autoplay blocked</p>
                   <button className="pill-btn primary" onClick={onManualPlay}>
-                    🔊 Ton abspielen
+                    🔊 Play Sound
                   </button>
                 </>
               )}
               {!loading && !error && !playbackBlocked && (
-                <p className="turn-card-hint">Song läuft — ordne ihn unten ein</p>
+                <p className="turn-card-hint">Song is playing — place it below</p>
               )}
             </>
           )}
 
           {turnPhase === "guessing" && (
-            <p className="turn-card-hint">Fast geschafft — noch raten?</p>
+            <p className="turn-card-hint">Almost there — want to guess?</p>
           )}
         </div>
 
@@ -94,15 +94,15 @@ export function TurnCard({
               {placedCard && (
                 <ul className="reveal-points">
                   <li className={placedCard.correctPlacement ? "hit" : "miss"}>
-                    <span>Platzierung</span>
+                    <span>Placement</span>
                     <span>{placedCard.correctPlacement ? "+1" : "—"}</span>
                   </li>
                   <li className={placedCard.correctYear ? "hit" : "miss"}>
-                    <span>Jahr genau</span>
+                    <span>Exact Year</span>
                     <span>{placedCard.correctYear ? "+1" : "—"}</span>
                   </li>
                   <li className={placedCard.correctArtist ? "hit" : "miss"}>
-                    <span>Interpret</span>
+                    <span>Artist</span>
                     <span>{placedCard.correctArtist ? "+1" : "—"}</span>
                   </li>
                   {placedCard.correctGenre !== null && (
@@ -121,7 +121,7 @@ export function TurnCard({
                   </p>
                   {playbackBlocked && (
                     <button className="pill-btn primary" onClick={onManualPlay}>
-                      🔊 Ton abspielen
+                      🔊 Play Sound
                     </button>
                   )}
                 </div>
