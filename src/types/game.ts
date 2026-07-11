@@ -37,6 +37,7 @@ export interface Song {
   year: number;
   genre: Genre;
   searchQuery: string;
+  videoId?: string;
 }
 
 export interface PlacedCard {

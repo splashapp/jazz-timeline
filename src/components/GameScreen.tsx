@@ -40,9 +40,12 @@ export function GameScreen({ state, dispatch }: Props) {
     preparedRef.current = null;
     const song = pickRandomSong(state.usedSongIds);
     if (!song) return;
-    const cached = videoCacheRef.current.get(song.id);
-    if (cached) {
-      preparedRef.current = { song, videoId: cached };
+    // Songs ship with a pre-resolved videoId (see scripts/resolve-video-ids.mjs)
+    // so most turns never need a live search.list call at all — that endpoint
+    // is capped at 100 requests/day on the free API tier.
+    const known = song.videoId ?? videoCacheRef.current.get(song.id);
+    if (known) {
+      preparedRef.current = { song, videoId: known };
       return;
     }
     let cancelled = false;
@@ -75,9 +78,11 @@ export function GameScreen({ state, dispatch }: Props) {
     dispatch({ type: "DRAW_SONG", song });
     if (!song) return;
 
-    if (prepared) {
+    const knownId = prepared?.videoId ?? song.videoId ?? videoCacheRef.current.get(song.id);
+    if (knownId) {
       setLoading(false);
-      serviceRef.current?.playVideoId(prepared.videoId);
+      videoCacheRef.current.set(song.id, knownId);
+      serviceRef.current?.playVideoId(knownId);
     } else {
       setLoading(true);
       serviceRef.current
@@ -95,9 +100,9 @@ export function GameScreen({ state, dispatch }: Props) {
     setError(null);
     setPlaybackBlocked(false);
     setNowPlaying(song);
-    const cached = videoCacheRef.current.get(song.id);
-    if (cached) {
-      serviceRef.current?.playVideoId(cached);
+    const knownId = song.videoId ?? videoCacheRef.current.get(song.id);
+    if (knownId) {
+      serviceRef.current?.playVideoId(knownId);
     } else {
       serviceRef.current
         ?.loadAndPlay(song)
