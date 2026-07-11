@@ -19,9 +19,8 @@ export function createInitialState(): GameState {
 }
 
 export type GameAction =
-  | { type: "SELECT_MEDIA"; service: MediaService }
   | { type: "SET_GENRE_FEATURE"; enabled: boolean }
-  | { type: "START_GAME"; playerNames: string[] }
+  | { type: "START_GAME"; mediaService: MediaService; playerNames: string[] }
   | { type: "DRAW_SONG"; song: Song | null }
   | { type: "PLACE_CARD"; index: number }
   | { type: "REVEAL"; yearGuess: number | null; artistGuess: string; genreGuess: Genre | null }
@@ -51,9 +50,6 @@ function matchesLastName(guess: string, artistLastName: string): boolean {
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
-    case "SELECT_MEDIA":
-      return { ...state, mediaService: action.service, phase: "setup-players" };
-
     case "SET_GENRE_FEATURE":
       return { ...state, genreFeatureEnabled: action.enabled };
 
@@ -66,6 +62,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }));
       return {
         ...state,
+        mediaService: action.mediaService,
         players,
         currentPlayerIndex: 0,
         usedSongIds: [],

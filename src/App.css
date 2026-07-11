@@ -137,7 +137,6 @@ button:disabled {
 .splash-screen {
   justify-content: center;
   gap: 20px;
-  cursor: pointer;
 }
 
 .splash-poster {
@@ -152,6 +151,47 @@ button:disabled {
   font-family: var(--font-mono);
   font-size: 13px;
   margin: 0;
+}
+
+.splash-solo-btn {
+  margin-top: 10px;
+  font-size: 17px;
+  padding: 16px 36px;
+}
+
+/* ---------- understated secondary link ---------- */
+
+.link-btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--muted);
+  padding: 6px 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: transparent;
+  transition: color 0.18s ease, text-decoration-color 0.18s ease;
+}
+
+.link-btn:hover {
+  color: var(--gold-soft);
+  text-decoration-color: currentColor;
+}
+
+/* ---------- back button ---------- */
+
+.back-btn {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 6px 8px;
+  margin: -6px 0 4px -8px;
+  transition: color 0.18s ease;
+}
+
+.back-btn:hover {
+  color: var(--gold-soft);
 }
 
 /* ---------- form fields ---------- */
@@ -198,47 +238,6 @@ button:disabled {
   max-width: 320px;
 }
 
-.field-label {
-  display: block;
-}
-
-.count-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.count-chip {
-  min-width: 44px;
-  height: 44px;
-  padding: 0 4px;
-  border-radius: 999px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
-  background: var(--glass-fill);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  color: var(--cream);
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.count-chip:hover {
-  transform: translateY(-2px);
-}
-
-.count-chip:active {
-  transform: scale(0.94);
-}
-
-.count-chip.active {
-  border-color: var(--gold);
-  color: var(--gold-soft);
-  box-shadow: var(--shadow-lift), 0 0 18px rgba(201, 162, 39, 0.3);
-}
-
 /* ---------- game screen ---------- */
 
 .game-screen {
@@ -258,8 +257,8 @@ button:disabled {
 .turn-card {
   position: relative;
   width: 100%;
-  max-width: 340px;
-  height: min(80vh, 640px);
+  max-width: 306px;
+  height: min(72vh, 576px);
   margin: 4px auto 0;
   perspective: 1800px;
 }
@@ -354,9 +353,9 @@ button:disabled {
 
 .vinyl-rig {
   position: relative;
-  width: clamp(140px, 40vw, 190px);
-  height: clamp(140px, 40vw, 190px);
-  margin-top: 30px;
+  width: clamp(126px, 36vw, 171px);
+  height: clamp(126px, 36vw, 171px);
+  margin-top: 27px;
 }
 
 .tonearm {

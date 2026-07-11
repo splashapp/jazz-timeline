@@ -28,10 +28,9 @@ A browser-based music guessing game inspired by **Hitster**, focused on jazz. De
 
 One device is passed around between players (pass-and-play). Flow:
 
-1. Splash screen with the poster, then straight into player setup
-2. Enter number of players and names
-3. Take turns: play a song, place it in your own timeline, optionally guess year/artist/genre
-4. After 10 cards per player, whoever has the most points wins
+1. Start screen with the poster — tap "▶ Play Solo" to jump straight in, or "With Multiple Players →" to enter names first
+2. Take turns: play a song, place it in your own timeline, optionally guess year/artist/genre
+3. After 10 cards per player, whoever has the most points wins
 
 ## Build
 

@@ -8,17 +8,23 @@ Over the course of the game, each player builds their own **personal timeline** 
 
 ## 2. Game Flow
 
-### 2.1 Step 1 — Splash Screen
-On launch, the app shows a full-screen poster (title "Jazz Timeline" above the artwork, "by Alex Rueß" below it). It automatically advances to player setup after 5 seconds, or immediately on tap/click anywhere on the screen.
+### 2.1 Step 1 — Start Screen
+On launch, the app shows a full-screen poster (title "Jazz Timeline" above the artwork, "by Alex Rueß" below it). The flow is designed around **one tap to start a solo game**, with everything else optional behind a secondary link:
 
-There is no music-service selection — the game always uses **YouTube** for playback (`mediaService` is fixed to `"youtube"` internally).
+- A large primary button, **"▶ Play Solo"**, starts the game immediately with a single default player ("Player 1") — no form, no required input, no intermediate screen.
+- A small, understated secondary link below it, **"With Multiple Players →"**, is the only way to reach player setup (step 2.2). It never gets in the way of the solo path.
+
+There is no music-service selection — the game always uses **YouTube** for playback (`mediaService` is fixed to `"youtube"` internally, set at the moment the game actually starts).
 
 > **Why only YouTube:** Spotify Web Playback requires a Premium account and an OAuth login flow; Apple Music requires a paid Apple Developer Program membership ($99/year) plus a MusicKit token. YouTube only needs a free Data API key and works without a subscription. The architecture uses an adapter pattern (see 6.3) so Spotify/Apple Music could be added later without touching the rest of the app.
 
-### 2.2 Step 2 — Player Setup
-- Choose the number of players (1–8; solo play is possible) via tappable count chips — no typing required
-- Enter player names
-- Continue to start the game
+### 2.2 Step 2 — Player Setup (multiplayer only)
+Only reached via "With Multiple Players →"; never shown on the solo path.
+
+- Back arrow to return to the start screen
+- Two pre-filled, editable fields ("Player 1", "Player 2") — no field is required to be changed
+- "+ Add Player" to add more fields, up to 8 players total
+- "Start Game" to continue
 
 ### 2.3 Step 3 — Turn Loop (per turn)
 1. Display: "It's Player X's turn"
@@ -103,7 +109,7 @@ interface GameState {
   currentPlayerIndex: number;
   usedSongIds: string[];
   roundsPerPlayer: number; // fixed at 10
-  phase: "setup-media" | "setup-players" | "playing" | "finished";
+  phase: "setup-media" | "playing" | "finished"; // player-count/name entry is local UI state, not a game phase
 }
 ```
 

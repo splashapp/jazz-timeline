@@ -54,7 +54,7 @@ export interface Player {
   score: number;
 }
 
-export type GamePhase = "setup-media" | "setup-players" | "playing" | "finished";
+export type GamePhase = "setup-media" | "playing" | "finished";
 
 export type TurnPhase = "ready" | "listening" | "guessing" | "revealed";
 

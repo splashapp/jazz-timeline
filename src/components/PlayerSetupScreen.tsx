@@ -1,47 +1,33 @@
 import { useState } from "react";
 
 interface Props {
+  onBack: () => void;
   onStart: (names: string[]) => void;
 }
 
-export function PlayerSetupScreen({ onStart }: Props) {
-  const [count, setCount] = useState(1);
-  const [names, setNames] = useState<string[]>(["Player 1"]);
+const MAX_PLAYERS = 8;
 
-  function setCountAndResize(n: number) {
-    const clamped = Math.min(8, Math.max(1, n));
-    setCount(clamped);
-    setNames((prev) => {
-      const next = [...prev];
-      while (next.length < clamped) next.push(`Player ${next.length + 1}`);
-      return next.slice(0, clamped);
-    });
-  }
+export function PlayerSetupScreen({ onBack, onStart }: Props) {
+  const [names, setNames] = useState<string[]>(["Player 1", "Player 2"]);
 
   function updateName(i: number, value: string) {
     setNames((prev) => prev.map((n, idx) => (idx === i ? value : n)));
+  }
+
+  function addPlayer() {
+    setNames((prev) =>
+      prev.length >= MAX_PLAYERS ? prev : [...prev, `Player ${prev.length + 1}`],
+    );
   }
 
   const validNames = names.map((n) => n.trim()).filter((n) => n.length > 0);
 
   return (
     <div className="screen player-setup">
+      <button className="back-btn" onClick={onBack} aria-label="Back">
+        ← Back
+      </button>
       <h1>Who's Playing?</h1>
-      <div className="field">
-        <span className="field-label">Number of Players</span>
-        <div className="count-chips">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-            <button
-              key={n}
-              type="button"
-              className={`count-chip${count === n ? " active" : ""}`}
-              onClick={() => setCountAndResize(n)}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="player-names">
         {names.map((name, i) => (
           <input
@@ -52,6 +38,11 @@ export function PlayerSetupScreen({ onStart }: Props) {
           />
         ))}
       </div>
+      {names.length < MAX_PLAYERS && (
+        <button className="link-btn" onClick={addPlayer}>
+          + Add Player
+        </button>
+      )}
       <button
         className="pill-btn primary"
         onClick={() => onStart(validNames)}
