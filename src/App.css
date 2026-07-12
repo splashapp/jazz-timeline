@@ -88,11 +88,13 @@ h2 {
   display: inline-flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: fit-content;
   max-width: 100%;
-  font-size: clamp(19px, 7cqw, 22px);
-  padding: 10px 28px;
+  /* ~18% down from clamp(19px,7cqw,22px) to make room alongside the head
+     group; still the loudest label on the card. */
+  font-size: clamp(16px, 5.7cqw, 18px);
+  padding: 8px 23px;
   color: var(--genre-text, var(--bg-ink));
   background: var(--genre-bg, var(--glass-fill));
   border-color: transparent;
@@ -105,8 +107,8 @@ h2 {
    Sized to match the doubled genre-accent badge — the mask scales with it,
    so line weight grows proportionally instead of just the bounding box. */
 .genre-accent .genre-badge-icon {
-  width: 28px;
-  height: 28px;
+  width: 23px;
+  height: 23px;
   flex: 0 0 auto;
   background-color: var(--genre-text, var(--bg-ink));
   -webkit-mask-image: var(--genre-icon);
@@ -365,25 +367,37 @@ button:disabled {
   position: relative;
   width: 100%;
   max-width: 306px;
-  height: min(72vh, 576px);
+  /* min-height (not height): the compact default, but TurnCard measures
+     content and applies min-height to .turn-card-flip-area when a face
+     (e.g. a 2-line artist name) needs more room than that — the card
+     grows rather than clipping or relying only on internal scrolling. */
+  min-height: min(72vh, 576px);
   margin: 4px auto 0;
-  perspective: 1800px;
+  display: flex;
+  flex-direction: column;
 }
 
+/* A real, reserved-height block — not an absolute overlay — so the flip
+   card below it (.turn-card-flip-area) can NEVER be positioned underneath
+   or collide with it, regardless of face content or font-size changes. */
 .turn-card-topbar {
-  position: absolute;
-  top: 20px;
-  left: 26px;
-  right: 26px;
+  flex: 0 0 auto;
+  height: 64px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  padding: 0 20px;
   z-index: 5;
-  pointer-events: none;
 }
 
 .turn-card-player {
+  /* Capped width (not just flex-shrink) plus min-width:0 so it always
+     ellipsis-truncates with room to spare before the counter/button
+     group, instead of only shrinking when space is already tight. */
+  flex: 0 1 auto;
+  max-width: 55%;
+  min-width: 0;
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 15px;
@@ -402,14 +416,23 @@ button:disabled {
 }
 
 .turn-card-topbar-right {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 10px;
-  pointer-events: none;
+}
+
+/* Takes the remaining height below the fixed-height topbar; the flip
+   card fills exactly this box (inset:0), so its centered content can
+   only ever render below the header, never inside/behind it. */
+.turn-card-flip-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  perspective: 1800px;
 }
 
 .play-pause-btn {
-  pointer-events: auto;
   width: 44px;
   height: 44px;
   flex: 0 0 auto;
@@ -479,15 +502,32 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 28px 24px;
-  overflow: hidden;
+  /* This box starts fresh below the reserved-height .turn-card-topbar (see
+     above), so it can't collide with the header no matter how tall the
+     content is — the 24px top padding is just breathing room, not a
+     collision-avoidance hack. Vertical centering now lives on
+     .turn-card-face-content (margin:auto), not justify-content:center here:
+     centering via justify-content clips equally off both ends when content
+     is taller than the box, which is exactly what silently cut off the
+     Next button before. overflow-y:auto is the last-resort fallback if a
+     face is still too tall even after that. */
+  padding: 24px 24px 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
   /* Lets the genre badge shrink relative to the card's own width (cqw)
      rather than the viewport — it needs to respond to how much room the
      306px-max card actually has, not how big the phone screen is. */
   container-type: inline-size;
   container-name: turn-card;
+}
+
+.turn-card-face-content {
+  width: 100%;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .turn-card-inner.is-flipped .front {
@@ -658,11 +698,24 @@ button:disabled {
 
 .reveal-year {
   font-family: var(--font-display);
-  font-size: clamp(64px, 20vw, 98px);
+  /* ~18% down from the previous clamp(64px,20vw,98px) — still the
+     clearly dominant element, just leaves room for a 2-line artist name. */
+  font-size: clamp(52px, 16vw, 80px);
   font-weight: 700;
   line-height: 1;
   color: var(--gold-soft);
   text-shadow: 0 0 28px rgba(224, 189, 82, 0.35);
+}
+
+/* Groups the badge and year as the card's compact "head" — the pair reads
+   as one unit, so the gap between them is tighter than the 20px rhythm
+   used for the rest of the back face. */
+.reveal-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
 }
 
 /* Artist is the dominant identity line now (bigger than the title): most
@@ -683,9 +736,21 @@ button:disabled {
   font-weight: 400;
 }
 
+/* Groups the table with its hint at a tighter 16px, independent of the
+   20px rhythm the rest of the back face uses — a caption should sit close
+   to what it explains, and the space saved goes toward keeping the Next
+   button reachable without scrolling. */
+.reveal-points-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
 .reveal-points {
   list-style: none;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -694,6 +759,20 @@ button:disabled {
   max-width: 220px;
   font-family: var(--font-mono);
   font-size: 12px;
+  cursor: pointer;
+}
+
+.reveal-points:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.reveal-points-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.75;
 }
 
 .reveal-points li {
@@ -701,6 +780,10 @@ button:disabled {
   justify-content: space-between;
   padding: 3px 2px;
   border-bottom: 1px solid rgba(232, 199, 140, 0.32);
+}
+
+.reveal-points li:last-child {
+  border-bottom: none;
 }
 
 /* Label = secondary/dim, always — correctness lives on the value only, so
