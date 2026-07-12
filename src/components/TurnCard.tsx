@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Song, PlacedCard, TurnPhase } from "../types/game";
 import { genreColorStyle } from "../utils/genreColors";
+import { InfoModal } from "./InfoModal";
 
 // Long artist credits (e.g. "Christian Scott aTunde Adjuah") wrap to two
 // lines; step the font down so that second line still fits comfortably
@@ -63,6 +64,8 @@ export function TurnCard({
   useEffect(() => {
     setShowGuesses(false);
   }, [placedCard]);
+
+  const [infoOpen, setInfoOpen] = useState(false);
 
   // Both faces are absolutely stacked (needed for the 3D flip), so neither
   // can grow the card via normal flow — a long 2-line artist name would
@@ -291,6 +294,20 @@ export function TurnCard({
           </div>
         </div>
       </div>
+
+      {/* Sits outside .turn-card-flip-area (which is what actually flips),
+          so one button/modal pair works identically on both the front
+          (vinyl/loading) and back (reveal) faces instead of needing to be
+          duplicated per face. */}
+      <button
+        type="button"
+        className="turn-card-info-btn"
+        onClick={() => setInfoOpen(true)}
+        aria-label="About Jazz Timeline"
+      >
+        i
+      </button>
+      {infoOpen && <InfoModal onClose={() => setInfoOpen(false)} />}
     </div>
   );
 }

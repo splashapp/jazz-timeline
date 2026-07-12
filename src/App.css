@@ -977,6 +977,41 @@ button:disabled {
   margin-top: 4px;
 }
 
+/* Sits outside the flip mechanism on the outer .turn-card (position:
+   relative), so it appears identically on both the front and back faces —
+   deliberately much smaller/quieter than the primary pill buttons so it
+   never competes with Play/Next, which stay horizontally centered and so
+   never contest this bottom-right corner. */
+.turn-card-info-btn {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 500;
+  /* Defensive: a plain lowercase "i", never the capital "I" — text-
+     transform:lowercase guards against that even if this ever inherits an
+     uppercase rule from a future refactor. */
+  text-transform: lowercase;
+  color: var(--muted);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  z-index: 6;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.turn-card-info-btn:hover {
+  color: var(--taupe-soft);
+  border-color: var(--taupe);
+}
+
 .reveal-points li {
   display: flex;
   justify-content: space-between;
@@ -1209,6 +1244,125 @@ button:disabled {
   -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--shadow-lift);
   animation: sheet-down 0.4s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* ---------- info/about modal ---------- */
+
+.info-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 10, 20, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+  animation: backdrop-in 0.25s ease both;
+}
+
+/* Slightly smaller than the turn card's own max-width (306px), centered
+   over it — same card material (fill/border/shadow/radius) as the rest of
+   the app, not a one-off modal style. */
+.info-modal {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  /* Extra top padding clears the absolutely positioned close button so it
+     never overlaps the photo below it. */
+  padding: 44px 20px 24px;
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  animation: modal-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.info-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.info-modal-close:hover {
+  color: var(--cream);
+  border-color: var(--taupe);
+}
+
+.info-modal-photo {
+  width: 100%;
+  max-width: 160px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.info-modal-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-optical-sizing: auto;
+  margin: 0;
+}
+
+/* The only part that scrolls if content overflows — photo, title and link
+   stay fixed in view regardless of bio length. */
+.info-modal-bio {
+  width: 100%;
+  max-height: 34vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.info-modal-bio p {
+  margin: 0;
+}
+
+.info-modal-link {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--taupe-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.18s ease;
+}
+
+.info-modal-link:hover {
+  color: var(--taupe);
 }
 
 @keyframes sheet-down {
