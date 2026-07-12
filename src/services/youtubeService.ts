@@ -36,22 +36,6 @@ interface YouTubePlayer {
 }
 
 const YT_STATE_PLAYING = 1;
-const YT_STATE_BUFFERING = 3;
-
-// iOS Safari blocks autoplay unless playVideo() is triggered directly by a
-// user gesture. Because loadAndPlay() awaits a network search first, the
-// gesture context is lost by the time playVideo() runs, so playback silently
-// fails to start. This timeout detects that case so the UI can offer the
-// header play/pause toggle as a manual fallback instead of staying silent
-// forever. 3s total turned out to be too tight — genuine (non-blocked) init
-// on a slower connection was getting misclassified as blocked. Widened to
-// ~6s (one retry attempt at the halfway point) so a genuine block still
-// surfaces reasonably quickly without punishing normal load time — a real
-// BUFFERING state (see handleStateChange) re-arms a fresh window on top of
-// this regardless, since that reflects real progress rather than a stalled
-// attempt.
-const PLAYBACK_BLOCKED_TIMEOUT_MS = 6000;
-const RETRY_AT_MS = 3000;
 
 let apiLoadPromise: Promise<void> | null = null;
 
@@ -78,18 +62,12 @@ export class YouTubeMusicService implements MusicService {
   private player: YouTubePlayer | null = null;
   private containerId: string;
   private initPromise: Promise<void> | null = null;
-  private blockedCb: ((blocked: boolean) => void) | null = null;
-  private blockedTimer: number | null = null;
   private playStateCb: ((isPlaying: boolean) => void) | null = null;
   private errorCb: (() => void) | null = null;
   private destroyed = false;
 
   constructor(containerId: string) {
     this.containerId = containerId;
-  }
-
-  onPlaybackBlocked(cb: (blocked: boolean) => void): void {
-    this.blockedCb = cb;
   }
 
   onPlayStateChange(cb: (isPlaying: boolean) => void): void {
@@ -104,28 +82,8 @@ export class YouTubeMusicService implements MusicService {
     this.errorCb = cb;
   }
 
-  private clearBlockedTimer(): void {
-    if (this.blockedTimer !== null) {
-      window.clearTimeout(this.blockedTimer);
-      this.blockedTimer = null;
-    }
-  }
-
   private handleStateChange(state: number): void {
     this.playStateCb?.(state === YT_STATE_PLAYING);
-    if (state === YT_STATE_PLAYING) {
-      this.clearBlockedTimer();
-      this.blockedCb?.(false);
-    } else if (state === YT_STATE_BUFFERING) {
-      // Buffering means the play() call WAS accepted and is actively
-      // progressing (common on slower mobile connections) — extend the
-      // grace period instead of letting a fixed timeout/retry-count treat
-      // normal loading time as a blocked autoplay.
-      this.clearBlockedTimer();
-      this.blockedTimer = window.setTimeout(() => {
-        this.blockedCb?.(true);
-      }, PLAYBACK_BLOCKED_TIMEOUT_MS);
-    }
   }
 
   init(): Promise<void> {
@@ -182,16 +140,14 @@ export class YouTubeMusicService implements MusicService {
   }
 
   // Loads a video without playing it, so it's already buffered by the time
-  // an actual play is triggered — called ahead of time (while a song is
-  // merely prefetched) rather than waiting for the play moment to start
-  // loading from scratch.
+  // the explicit Play button is actually clicked.
   cueVideoId(videoId: string): void {
     this.player?.cueVideoById(videoId);
   }
 
-  // Synchronous on purpose: this must be callable directly from a click
-  // handler (no awaits before it) so iOS Safari treats it as a genuine
-  // user-gesture-triggered play, e.g. for a cached/prefetched video id.
+  // Called directly from the "Play Song" button's click handler — a real
+  // user gesture, so iOS Safari's autoplay restrictions are simply never in
+  // play here; no blocked-detection/retry timers needed.
   playVideoId(videoId: string): void {
     if (!this.player) return;
     // Reset whatever was previously loaded/playing before starting the new
@@ -205,28 +161,6 @@ export class YouTubeMusicService implements MusicService {
     this.player.unMute();
     this.player.setVolume(100);
     this.player.playVideo();
-    this.armBlockedTimer(false);
-  }
-
-  // If playback hasn't reached the PLAYING state by the halfway point,
-  // retry playVideo() once (covers transient buffering/init hiccups);
-  // if it still hasn't by the full ~3s budget, report "blocked" so the UI
-  // can point at the header play/pause toggle. Any newer playVideoId()/
-  // stop() call clears this timer first, so a stale retry can never fire
-  // for a video that's no longer the current one.
-  private armBlockedTimer(retried: boolean): void {
-    this.clearBlockedTimer();
-    this.blockedTimer = window.setTimeout(
-      () => {
-        if (!retried) {
-          this.player?.playVideo();
-          this.armBlockedTimer(true);
-        } else {
-          this.blockedCb?.(true);
-        }
-      },
-      retried ? PLAYBACK_BLOCKED_TIMEOUT_MS - RETRY_AT_MS : RETRY_AT_MS,
-    );
   }
 
   async loadAndPlay(song: Song): Promise<string> {
@@ -250,8 +184,6 @@ export class YouTubeMusicService implements MusicService {
   }
 
   stop(): void {
-    this.clearBlockedTimer();
-    this.blockedCb?.(false);
     this.playStateCb?.(false);
     this.player?.stopVideo();
   }
@@ -263,7 +195,6 @@ export class YouTubeMusicService implements MusicService {
   // and one of them would never fire onReady, hanging init() forever.
   destroy(): void {
     this.destroyed = true;
-    this.clearBlockedTimer();
     this.player?.destroy();
     this.player = null;
   }

@@ -21,10 +21,9 @@ export function createInitialState(): GameState {
 export type GameAction =
   | { type: "SET_GENRE_FEATURE"; enabled: boolean }
   | { type: "START_GAME"; mediaService: MediaService; playerNames: string[] }
-  | { type: "DRAW_SONG"; song: Song | null }
   | { type: "PLACE_CARD"; index: number }
   | { type: "REVEAL"; yearGuess: number | null; artistGuess: string; genreGuess: Genre | null }
-  | { type: "NEXT_TURN"; song: Song | null }
+  | { type: "NEXT_TURN" }
   | { type: "RESET" };
 
 export function pickRandomSong(usedIds: string[]): Song | null {
@@ -60,29 +59,24 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         timeline: [],
         score: 0,
       }));
-      return {
-        ...state,
-        mediaService: action.mediaService,
-        players,
-        currentPlayerIndex: 0,
-        usedSongIds: [],
-        phase: "playing",
-        turnPhase: "ready",
-        currentSong: null,
-        pendingPlacementIndex: null,
-      };
-    }
-
-    case "DRAW_SONG": {
-      const song = action.song;
+      // The reducer picks the song itself now (simple/original flow): the
+      // player just starts the game, sees "Searching…" while useMusicPlayback
+      // resolves the video, then an explicit Play button once it's ready —
+      // no synchronous playback needs to happen inside this click itself.
+      const song = pickRandomSong([]);
       if (!song) {
         return { ...state, phase: "finished" };
       }
       return {
         ...state,
-        currentSong: song,
-        usedSongIds: [...state.usedSongIds, song.id],
+        mediaService: action.mediaService,
+        players,
+        currentPlayerIndex: 0,
+        usedSongIds: [song.id],
+        phase: "playing",
         turnPhase: "listening",
+        currentSong: song,
+        pendingPlacementIndex: null,
       };
     }
 
@@ -143,17 +137,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         nextIndex = (nextIndex + 1) % state.players.length;
         guard++;
       }
-      // The next song is picked by the caller (GameScreen) and passed in
-      // here so the very same click that advances the turn can also start
-      // playback synchronously — going straight to "listening" instead of
-      // a separate "ready" gate that would need its own button/gesture.
-      const song = action.song;
+      const song = pickRandomSong(state.usedSongIds);
+      if (!song) {
+        return { ...state, phase: "finished" };
+      }
       return {
         ...state,
         currentPlayerIndex: nextIndex,
-        turnPhase: song ? "listening" : "ready",
+        turnPhase: "listening",
         currentSong: song,
-        usedSongIds: song ? [...state.usedSongIds, song.id] : state.usedSongIds,
+        usedSongIds: [...state.usedSongIds, song.id],
         pendingPlacementIndex: null,
       };
     }

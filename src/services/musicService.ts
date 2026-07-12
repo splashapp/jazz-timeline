@@ -10,7 +10,6 @@ export interface MusicService {
   pause(): void;
   stop(): void;
   destroy(): void;
-  onPlaybackBlocked(cb: (blocked: boolean) => void): void;
   onPlayStateChange(cb: (isPlaying: boolean) => void): void;
   onPlaybackError(cb: () => void): void;
 }

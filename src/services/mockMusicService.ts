@@ -6,15 +6,10 @@ import type { Song } from "../types/game";
 // screen exercise the full game flow (search, play, pause, replay) while
 // testing UI/design changes locally.
 export class MockMusicService implements MusicService {
-  private blockedCb: ((blocked: boolean) => void) | null = null;
   private playStateCb: ((isPlaying: boolean) => void) | null = null;
 
   async init(): Promise<void> {
     // Nothing to set up.
-  }
-
-  onPlaybackBlocked(cb: (blocked: boolean) => void): void {
-    this.blockedCb = cb;
   }
 
   onPlayStateChange(cb: (isPlaying: boolean) => void): void {
@@ -38,7 +33,6 @@ export class MockMusicService implements MusicService {
 
   playVideoId(_videoId: string): void {
     this.playStateCb?.(true);
-    this.blockedCb?.(false);
   }
 
   async loadAndPlay(song: Song): Promise<string> {
@@ -57,7 +51,6 @@ export class MockMusicService implements MusicService {
 
   stop(): void {
     this.playStateCb?.(false);
-    this.blockedCb?.(false);
   }
 
   destroy(): void {

@@ -723,6 +723,15 @@ button:disabled {
   min-height: 20px;
 }
 
+/* The explicit "Play Song" button — the real user gesture that starts
+   playback, once the video is resolved and ready. Slightly smaller than
+   the main pill-btn scale so it sits comfortably under the compact vinyl
+   rig rather than dominating it. */
+.turn-card-play-btn {
+  font-size: 14px;
+  padding: 11px 24px;
+}
+
 .turn-card-error {
   color: var(--miss);
   font-size: 13px;

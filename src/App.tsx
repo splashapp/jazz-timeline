@@ -9,18 +9,19 @@ import { useMusicPlayback } from "./hooks/useMusicPlayback";
 import "./App.css";
 
 const isDebugView = new URLSearchParams(window.location.search).has("debug");
+// Default to mock mode on localhost only — real deployments (Vercel, etc.)
+// still default to the real YouTube service regardless of build mode.
+const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const [onboardingView, setOnboardingView] = useState<"start" | "multiplayer">("start");
-  const [mockMode, setMockMode] = useState(false);
+  const [mockMode, setMockMode] = useState(isLocalhost);
   const mediaService = mockMode ? "mock" : "youtube";
 
-  // Owned here (not inside GameScreen) so the player already exists — and
-  // can be prefetching/cueing the first song — while still on the splash
-  // screen, which is what lets "Play Solo"/"Start Game" trigger that song
-  // synchronously within their own click instead of needing a separate
-  // "Play Song" button once the game screen mounts.
+  // Owned here (not inside GameScreen) so the single player instance
+  // persists across the whole app rather than being torn down/recreated
+  // between screens.
   const music = useMusicPlayback(mediaService, state, dispatch);
 
   if (isDebugView) {
@@ -32,11 +33,7 @@ function App() {
   }
 
   const startGame = (playerNames: string[]) => {
-    // START_GAME first: it resets usedSongIds/turnPhase/currentSong, which
-    // would otherwise clobber the DRAW_SONG that playFirstSongSync
-    // dispatches. Both calls are still synchronous within this same click.
     dispatch({ type: "START_GAME", mediaService, playerNames });
-    music.playFirstSongSync();
   };
 
   return (

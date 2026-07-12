@@ -27,11 +27,12 @@ export function GameScreen({ state, dispatch, music }: Props) {
         turnPhase={state.turnPhase}
         currentSong={state.currentSong}
         placedCard={placedCard}
-        loading={music.loading}
+        songReady={music.songReady}
+        starting={music.starting}
         error={music.error}
-        playbackBlocked={music.playbackBlocked}
         nowPlaying={music.nowPlaying}
         isPlaying={music.isPlaying}
+        onPlaySong={music.handlePlaySong}
         onTogglePlay={music.handleTogglePlay}
         onNext={music.handleNext}
         nextLabel={isSolo ? "Next" : "Next Player"}

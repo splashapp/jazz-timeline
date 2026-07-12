@@ -19,11 +19,12 @@ interface Props {
   turnPhase: TurnPhase;
   currentSong: Song | null;
   placedCard: PlacedCard | undefined;
-  loading: boolean;
+  songReady: boolean;
+  starting: boolean;
   error: string | null;
-  playbackBlocked: boolean;
   nowPlaying: Song | null;
   isPlaying: boolean;
+  onPlaySong: () => void;
   onTogglePlay: () => void;
   onNext: () => void;
   nextLabel: string;
@@ -35,22 +36,23 @@ export function TurnCard({
   turnPhase,
   currentSong,
   placedCard,
-  loading,
+  songReady,
+  starting,
   error,
-  playbackBlocked,
   nowPlaying,
   isPlaying,
+  onPlaySong,
   onTogglePlay,
   onNext,
   nextLabel,
   playerName,
   roundLabel,
 }: Props) {
-  // Also drop the needle while the very first song is still resolving
-  // ("ready" + loading) — otherwise the card sits frozen with no feedback
-  // at all during the one moment that can genuinely take a moment.
-  const spinning =
-    turnPhase === "listening" || turnPhase === "guessing" || (turnPhase === "ready" && loading);
+  // Reflects the actual player state — the needle only drops once audio is
+  // genuinely playing, whether that's the current turn's song, still
+  // playing through "guessing"/"revealed", or a replayed song from the
+  // timeline.
+  const spinning = isPlaying;
   const flipped = turnPhase === "revealed";
 
   // Hidden by default: seeing your own guessed text next to a green "+1"
@@ -84,7 +86,7 @@ export function TurnCard({
     document.fonts?.ready.then(measure);
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [turnPhase, currentSong, placedCard, nowPlaying, showGuesses, playbackBlocked, loading, error]);
+  }, [turnPhase, currentSong, placedCard, nowPlaying, showGuesses, songReady, starting, error]);
 
   return (
     <div className="turn-card">
@@ -151,32 +153,19 @@ export function TurnCard({
                 <div className="vinyl-sheen" />
               </div>
 
-              {turnPhase === "ready" && (
+              {(turnPhase === "ready" || turnPhase === "listening") && (
                 <>
                   {error && <p className="turn-card-error">{error}</p>}
-                  {!error && playbackBlocked && (
-                    <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
+                  {!error && !songReady && <p className="turn-card-hint">Searching …</p>}
+                  {!error && songReady && !isPlaying && !starting && (
+                    <button type="button" className="pill-btn primary turn-card-play-btn" onClick={onPlaySong}>
+                      ▶ Play Song
+                    </button>
                   )}
-                  {!error && !playbackBlocked && (
-                    <p className="turn-card-hint">Loading song …</p>
+                  {!error && songReady && !isPlaying && starting && (
+                    <p className="turn-card-hint">Starting …</p>
                   )}
-                </>
-              )}
-
-              {turnPhase === "listening" && (
-                <>
-                  {error && <p className="turn-card-error">{error}</p>}
-                  {!error && playbackBlocked && (
-                    <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
-                  )}
-                  {/* Between the click and the PLAYING state actually being
-                      confirmed — including the ~3s grace period where
-                      buffering keeps extending it — show a loading state
-                      rather than claiming it's already playing. */}
-                  {!error && !playbackBlocked && !isPlaying && (
-                    <p className="turn-card-hint">Loading song …</p>
-                  )}
-                  {!error && !playbackBlocked && isPlaying && (
+                  {!error && songReady && isPlaying && (
                     <p className="turn-card-hint">Song is playing — place it below</p>
                   )}
                 </>
@@ -291,10 +280,6 @@ export function TurnCard({
                             </div>
                           );
                         })()}
-
-                      {nowPlaying && playbackBlocked && (
-                        <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
-                      )}
 
                       <button className="pill-btn primary turn-card-next-btn" onClick={onNext}>
                         {nextLabel}
