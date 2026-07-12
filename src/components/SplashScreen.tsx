@@ -1,4 +1,4 @@
-import posterImage from "../assets/jazz-poster.png";
+import posterImage from "../assets/Title_Alex_01.png";
 
 interface Props {
   onSolo: () => void;

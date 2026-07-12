@@ -192,16 +192,16 @@ button:disabled {
 }
 
 .pill-btn.primary {
-  border-color: var(--gold);
-  color: #241705;
-  background: linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 55%, var(--gold-deep) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 6px rgba(0, 0, 0, 0.22),
+  border-color: var(--taupe);
+  color: var(--bg-ink);
+  background: linear-gradient(180deg, var(--taupe-soft) 0%, var(--taupe) 55%, var(--taupe-deep) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.28),
     var(--shadow-soft);
 }
 
 .pill-btn.primary:hover:not(:disabled) {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 6px rgba(0, 0, 0, 0.22),
-    var(--shadow-lift), 0 0 26px rgba(201, 162, 39, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.28),
+    var(--shadow-lift), 0 0 26px rgba(156, 130, 104, 0.45);
 }
 
 .pill-btn:disabled {
@@ -259,7 +259,7 @@ button:disabled {
 }
 
 .link-btn:hover {
-  color: var(--gold-soft);
+  color: var(--taupe-soft);
   text-decoration-color: currentColor;
 }
 
@@ -300,7 +300,7 @@ button:disabled {
 }
 
 .back-btn:hover {
-  color: var(--gold-soft);
+  color: var(--taupe-soft);
 }
 
 /* ---------- form fields ---------- */
@@ -335,8 +335,8 @@ button:disabled {
 .field select:focus-visible,
 .player-names input:focus-visible {
   outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.22);
+  border-color: var(--taupe);
+  box-shadow: 0 0 0 3px rgba(156, 130, 104, 0.28);
 }
 
 .player-names {
@@ -376,9 +376,20 @@ button:disabled {
   }
 }
 
+/* Not zero-sized (some browsers treat a literal 0x0 video forcing audio as
+   a known hidden-ad-autoplay pattern and mute it defensively) and kept
+   on-screen rather than pushed far off-canvas — a large negative offset
+   can get the iframe throttled by the browser as "offscreen" content,
+   which is worse: it can stop it responding to play() in time at all.
+   opacity + pointer-events do the actual hiding instead. */
 .yt-hidden {
-  width: 0;
-  height: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
   overflow: hidden;
 }
 
@@ -461,8 +472,8 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, #342620, #1a120e 70%);
-  border: 1px solid #4a3a2a;
+  background: radial-gradient(circle at 35% 30%, #29335a, #12162a 70%);
+  border: 1px solid #3a4568;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.4),
     var(--shadow-soft);
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease;
@@ -561,10 +572,11 @@ button:disabled {
 
 .turn-card-face.back {
   transform: rotateY(180deg);
-  /* Subtle vignette instead of a flat fill: a soft lift top-left gives the
-     card presence against the page background rather than blending into
-     it, without brightening the --glass-fill-strong token used elsewhere. */
-  background: radial-gradient(circle at 32% 18%, rgba(82, 56, 39, 0.92), rgba(58, 38, 26, 0.86) 65%);
+  /* Taupe-tinted vignette (blended back into dark navy, not a flat taupe
+     fill) — reads as the "cover reveal" surface, distinct from the front's
+     plain navy glass, while staying dark enough for the white reveal text
+     to hold contrast. */
+  background: radial-gradient(circle at 32% 18%, rgba(124, 101, 82, 0.55), rgba(20, 28, 56, 0.92) 68%);
 }
 
 .turn-card-hint {
@@ -724,8 +736,10 @@ button:disabled {
   font-size: clamp(52px, 16vw, 80px);
   font-weight: 700;
   line-height: 1;
-  color: var(--gold-soft);
-  text-shadow: 0 0 28px rgba(224, 189, 82, 0.35);
+  /* White/off-white per the editorial, less-"vintage-glow" direction — the
+     warm taupe brand accent now lives in the ambient glow, not the ink. */
+  color: var(--cream);
+  text-shadow: 0 0 28px rgba(156, 130, 104, 0.4);
 }
 
 /* Groups the badge and year as the card's compact "head" — the pair reads
@@ -895,8 +909,8 @@ button:disabled {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1px dashed var(--gold);
-  color: var(--gold-soft);
+  border: 1px dashed var(--taupe);
+  color: var(--taupe-soft);
   background: var(--glass-fill);
   font-size: 16px;
   line-height: 1;
@@ -914,10 +928,10 @@ button:disabled {
 @keyframes pulse-invite {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.35);
+    box-shadow: 0 0 0 0 rgba(156, 130, 104, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(201, 162, 39, 0);
+    box-shadow: 0 0 0 6px rgba(156, 130, 104, 0);
   }
 }
 
@@ -1073,8 +1087,8 @@ button:disabled {
 }
 
 .score-item.active {
-  border-color: var(--gold);
-  color: var(--gold-soft);
+  border-color: var(--taupe);
+  color: var(--taupe-soft);
 }
 
 .score-pop {

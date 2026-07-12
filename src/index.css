@@ -1,28 +1,33 @@
 :root {
   color-scheme: dark;
 
-  /* Warm dark palette — smoky jazz-club, not flat black */
-  --bg-ink: #150f0d;
-  --bg-umber: #2b1a12;
-  --bg-ember: #4a2818;
+  /* Navy + warm taupe — shared brand family with the Alexander Rueß site.
+     Gold survives only as the secondary/functional accent (genre badges,
+     vinyl hardware); navy + taupe are the new primary brand base. */
+  --bg-ink: #10152b;
+  --bg-navy: #1a2547;
+  --bg-navy-deep: #232f57;
+  --taupe: #9c8268;
+  --taupe-soft: #b89b7c;
+  --taupe-deep: #7a6552;
   --gold: #c9a227;
   --gold-soft: #e0bd52;
   --gold-deep: #8a6a1a;
   --amber: #e8794a;
-  --cream: #f4ead9;
-  --muted: #c9b294;
+  --cream: #f5f0e8;
+  --muted: #b3a99a;
   --hit: #8bb572;
   --miss: #c1573f;
 
   /* Smoked-glass surfaces: real body (not near-transparent cream) so cards
      separate from the background gradient instead of blending into it. */
-  --glass-fill: rgba(58, 38, 26, 0.55);
-  --glass-fill-strong: rgba(58, 38, 26, 0.8);
-  --glass-border: rgba(232, 199, 140, 0.22);
+  --glass-fill: rgba(41, 52, 89, 0.55);
+  --glass-fill-strong: rgba(41, 52, 89, 0.82);
+  --glass-border: rgba(245, 240, 232, 0.16);
   --glass-blur: 18px;
 
-  --shadow-soft: 0 8px 30px rgba(10, 6, 4, 0.45);
-  --shadow-lift: 0 16px 48px rgba(10, 6, 4, 0.55);
+  --shadow-soft: 0 8px 30px rgba(6, 8, 18, 0.45);
+  --shadow-lift: 0 16px 48px rgba(6, 8, 18, 0.55);
 
   /* Restrained serif for the two ceremonial moments (brand wordmark, the
      big reveal year); everything else is a confident modern grotesk, with
@@ -47,9 +52,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 900px 600px at 20% -10%, rgba(232, 121, 74, 0.16), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 110%, rgba(201, 162, 39, 0.1), transparent 55%),
-    linear-gradient(160deg, var(--bg-ink) 0%, var(--bg-umber) 55%, var(--bg-ember) 100%);
+    radial-gradient(ellipse 900px 600px at 20% -10%, rgba(156, 130, 104, 0.16), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 110%, rgba(156, 130, 104, 0.12), transparent 55%),
+    linear-gradient(160deg, var(--bg-ink) 0%, var(--bg-navy) 55%, var(--bg-navy-deep) 100%);
   background-attachment: fixed;
   color: var(--cream);
 }

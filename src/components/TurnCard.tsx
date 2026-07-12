@@ -153,22 +153,30 @@ export function TurnCard({
 
               {turnPhase === "ready" && (
                 <>
-                  {loading && <p className="turn-card-hint">Loading song …</p>}
                   {error && <p className="turn-card-error">{error}</p>}
-                  {!loading && !error && playbackBlocked && (
+                  {!error && playbackBlocked && (
                     <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
+                  )}
+                  {!error && !playbackBlocked && (
+                    <p className="turn-card-hint">Loading song …</p>
                   )}
                 </>
               )}
 
               {turnPhase === "listening" && (
                 <>
-                  {loading && <p className="turn-card-hint">Loading song …</p>}
                   {error && <p className="turn-card-error">{error}</p>}
-                  {!loading && !error && playbackBlocked && (
+                  {!error && playbackBlocked && (
                     <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
                   )}
-                  {!loading && !error && !playbackBlocked && (
+                  {/* Between the click and the PLAYING state actually being
+                      confirmed — including the ~3s grace period where
+                      buffering keeps extending it — show a loading state
+                      rather than claiming it's already playing. */}
+                  {!error && !playbackBlocked && !isPlaying && (
+                    <p className="turn-card-hint">Loading song …</p>
+                  )}
+                  {!error && !playbackBlocked && isPlaying && (
                     <p className="turn-card-hint">Song is playing — place it below</p>
                   )}
                 </>
