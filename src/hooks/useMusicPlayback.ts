@@ -89,17 +89,26 @@ export function useMusicPlayback(
     };
 
     const known = getKnownVideoId(song);
-    if (known) {
-      markReady(known);
-      return;
-    }
-
+    // init() must run before cueVideoId()/playVideoId() regardless of
+    // whether the id is already known — it's what actually creates the
+    // underlying YT.Player. Skipping it here (as a previous version did)
+    // left cueVideoId a silent no-op against a null player once every song
+    // had a stored videoId and this "known" branch became the only path
+    // ever taken — the Play button would set "starting" and then nothing
+    // would ever actually play.
     serviceRef.current
       .init()
-      .then(() => serviceRef.current!.resolveVideoId(song.searchQuery))
+      .then(() => {
+        if (cancelled) return;
+        if (known) return known;
+        return serviceRef.current!.resolveVideoId(song.searchQuery);
+      })
       .then((videoId) => {
         if (cancelled) return;
-        if (!videoId) throw new Error(`No YouTube video found for "${song.searchQuery}".`);
+        if (!videoId) {
+          setError(`No YouTube video found for "${song.searchQuery}".`);
+          return;
+        }
         markReady(videoId);
       })
       .catch((e: Error) => {
