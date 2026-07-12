@@ -86,6 +86,18 @@ export function useMusicPlayback(
       return;
     }
 
+    // This effect re-runs on every turnPhase change (e.g. listening ->
+    // guessing -> revealed), not just when a new song was actually drawn —
+    // but usedSongIds (and so the "next song to prepare") stays the same
+    // across those transitions. Without this guard, cueVideoId() below
+    // would fire again on the SAME already-prepared song, which reuses the
+    // one live player and interrupts whatever is currently playing (e.g.
+    // the currently-playing song cutting out the moment the guess dialog
+    // opens) for no actual change in what's prepared.
+    if (!startsNow && preparedRef.current?.song.id === song.id) {
+      return;
+    }
+
     const startPlayback = (videoId: string) => {
       videoCacheRef.current.set(song.id, videoId);
       lastAttemptRef.current = song;

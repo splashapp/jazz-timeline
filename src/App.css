@@ -59,6 +59,84 @@ h2 {
   font-optical-sizing: auto;
 }
 
+/* Deck picker — a disabled <select> below the fixed "Jazz Timeline" title,
+   structurally ready for a future deck picker without looking like a form
+   control. --small halves the wordmark's type scale and sits it under the
+   credit line, well below the page title it doesn't replace anymore. */
+/* auto-width (NOT width:100%) is deliberate: the parent .screen is itself
+   a flex column with align-items:center, which already centers this
+   auto-width group as a unit — and, critically, keeps the chevron's
+   position:absolute right:0 anchored to THIS box's own right edge (the
+   select's rendered width) rather than the full screen width, which is
+   what happens if this wrap is stretched to 100%. */
+.deck-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.deck-select-wrap--small {
+  margin-top: 8px;
+}
+
+.deck-select-wrap--small .deck-select {
+  font-size: clamp(15px, 3.5vw, 21px);
+  padding: 0 12px;
+}
+
+.deck-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background: transparent;
+  margin: 0;
+  /* Mirrored left/right padding (not padding-right only) so the text
+     itself sits truly centered in the box — the chevron (absolutely
+     positioned, doesn't consume layout space) then reads as a balanced
+     addition to the right rather than shifting the visible text off
+     dead-center. */
+  padding: 0 22px;
+  text-align: center;
+  text-align-last: center;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 7vw, 42px);
+  font-optical-sizing: auto;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cream);
+  cursor: default;
+}
+
+/* Best-effort centering for the open option list — respected by Firefox
+   and, to varying degrees, Chromium; iOS/Safari renders its own native
+   picker UI that ignores option styling entirely and can't be overridden
+   from CSS. */
+.deck-select option {
+  text-align: center;
+}
+
+/* Browsers apply their own dimmed/graytext style to disabled form controls
+   by default — override it so the title itself stays at full strength;
+   only the chevron (below) is deliberately dimmed to signal "not
+   interactive yet". */
+.deck-select:disabled {
+  opacity: 1;
+  color: var(--cream);
+  -webkit-text-fill-color: var(--cream);
+}
+
+.deck-select-chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-40%);
+  color: var(--cream);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .subtitle {
   color: var(--muted);
   margin: 0;
@@ -220,12 +298,68 @@ button:disabled {
   gap: 0;
 }
 
-.splash-poster {
+.splash-poster-frame {
+  position: relative;
   width: 100%;
   max-width: 360px;
   margin-top: 48px;
-  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Concentric-groove motif (same repeating-radial-gradient technique as
+   .vinyl) peeking out from behind the poster — the visual bracket between
+   the splash screen and the vinyl/turntable card screens that follow. */
+.splash-poster-rings {
+  position: absolute;
+  width: 128%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at center,
+    rgba(245, 240, 232, 0.07) 0,
+    rgba(245, 240, 232, 0.07) 1px,
+    transparent 1px,
+    transparent 16px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Same corner radius, border and shadow treatment as .turn-card-face, so
+   the poster reads as a card in the same visual system as the game
+   screens rather than an isolated photo. */
+.splash-poster-clip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-lift);
+}
+
+.splash-poster {
+  display: block;
+  width: 100%;
+  /* Navy shadows / taupe highlights (see #duotone-navy-taupe above) — the
+     gradient map alone determines the color; no contrast/saturate stacked
+     on top, so the two anchor colors stay exactly on-brand instead of
+     drifting toward a third, unintended hue. */
+  filter: url(#duotone-navy-taupe);
+}
+
+/* Same noise texture as the page background (body::before) reused at
+   higher opacity directly on the poster, so it reads as a deliberately
+   printed/postered element rather than a clean glossy photo. */
+.splash-poster-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .splash-credit {
@@ -526,7 +660,6 @@ button:disabled {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 32px;
-  background: var(--glass-fill);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -570,13 +703,28 @@ button:disabled {
   pointer-events: none;
 }
 
+/* The "back of the card" a player sees while a song is playing — a
+   physical Hitster card's blank reverse, not a dimmer copy of the reveal
+   face. Deliberately much darker + more opaque than .back below (a direct
+   swatch comparison should read as obviously darker, not just "a bit
+   moodier"), a rounder radius, and a taupe hairline instead of the neutral
+   .glass-border — so the two faces are told apart by brightness and
+   contour alone, before a player even reads the (single, minimal) hint
+   line. The border deliberately does NOT use the current song's genre
+   color: genre is one of the guessable fields, so tinting this face with
+   it before the reveal would leak the answer. */
+.turn-card-face.front {
+  border-radius: 40px;
+  border-color: rgba(156, 130, 104, 0.28);
+  background: rgba(9, 12, 26, 0.95);
+}
+
 .turn-card-face.back {
   transform: rotateY(180deg);
-  /* Taupe-tinted vignette (blended back into dark navy, not a flat taupe
-     fill) — reads as the "cover reveal" surface, distinct from the front's
-     plain navy glass, while staying dark enough for the white reveal text
-     to hold contrast. */
-  background: radial-gradient(circle at 32% 18%, rgba(124, 101, 82, 0.55), rgba(20, 28, 56, 0.92) 68%);
+  /* Brighter, taupe-forward vignette — the clear counterpart to .front's
+     near-black surface above; the "cover reveal" side, information-rich
+     and comparatively light. */
+  background: radial-gradient(circle at 32% 18%, rgba(156, 130, 104, 0.65), rgba(41, 52, 89, 0.6) 70%);
 }
 
 .turn-card-hint {
@@ -650,6 +798,9 @@ button:disabled {
   height: 100%;
   border-radius: 50%;
   position: relative;
+  /* Same navy family as the page background (--bg-ink/--bg-navy), just
+     darker throughout — the disc reads as "the app's own background,
+     pressed into vinyl" rather than an unrelated warm-brown record. */
   background: repeating-radial-gradient(
       circle at center,
       rgba(255, 255, 255, 0.07) 0,
@@ -657,7 +808,7 @@ button:disabled {
       transparent 1px,
       transparent 11px
     ),
-    radial-gradient(circle at 32% 28%, #362b23 0%, #1c1512 35%, #0a0706 75%, #050403 100%);
+    radial-gradient(circle at 32% 28%, #202c52 0%, #121a34 35%, #070a16 75%, #03040a 100%);
   box-shadow: 0 0 0 1px rgba(244, 234, 217, 0.09), 0 0 0 6px rgba(0, 0, 0, 0.35),
     inset 0 0 32px rgba(0, 0, 0, 0.55), var(--shadow-lift), 0 14px 24px rgba(0, 0, 0, 0.4);
   animation: spin 5.5s linear infinite;
