@@ -796,6 +796,13 @@ button:disabled {
   opacity: 0.75;
 }
 
+/* A little extra room before Next now that the (sometimes-rendered) Play
+   Sound fallback button is gone for good — 20px shared gap + 4px = a full
+   24px, still an 8px-grid step. */
+.turn-card-next-btn {
+  margin-top: 4px;
+}
+
 .reveal-points li {
   display: flex;
   justify-content: space-between;

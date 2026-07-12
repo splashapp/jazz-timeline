@@ -32,6 +32,10 @@ export class MockMusicService implements MusicService {
     return `mock-${query.length}`;
   }
 
+  cueVideoId(_videoId: string): void {
+    // Nothing to preload in the mock.
+  }
+
   playVideoId(_videoId: string): void {
     this.playStateCb?.(true);
     this.blockedCb?.(false);
@@ -54,5 +58,9 @@ export class MockMusicService implements MusicService {
   stop(): void {
     this.playStateCb?.(false);
     this.blockedCb?.(false);
+  }
+
+  destroy(): void {
+    // Nothing to tear down in the mock.
   }
 }

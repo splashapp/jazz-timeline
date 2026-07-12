@@ -24,9 +24,7 @@ interface Props {
   playbackBlocked: boolean;
   nowPlaying: Song | null;
   isPlaying: boolean;
-  onManualPlay: () => void;
   onTogglePlay: () => void;
-  onPlay: () => void;
   onNext: () => void;
   nextLabel: string;
   playerName: string;
@@ -42,15 +40,17 @@ export function TurnCard({
   playbackBlocked,
   nowPlaying,
   isPlaying,
-  onManualPlay,
   onTogglePlay,
-  onPlay,
   onNext,
   nextLabel,
   playerName,
   roundLabel,
 }: Props) {
-  const spinning = turnPhase === "listening" || turnPhase === "guessing";
+  // Also drop the needle while the very first song is still resolving
+  // ("ready" + loading) — otherwise the card sits frozen with no feedback
+  // at all during the one moment that can genuinely take a moment.
+  const spinning =
+    turnPhase === "listening" || turnPhase === "guessing" || (turnPhase === "ready" && loading);
   const flipped = turnPhase === "revealed";
 
   // Hidden by default: seeing your own guessed text next to a green "+1"
@@ -153,10 +153,11 @@ export function TurnCard({
 
               {turnPhase === "ready" && (
                 <>
-                  <p className="turn-card-hint">Drop the needle</p>
-                  <button className="pill-btn primary" onClick={onPlay}>
-                    Play Song
-                  </button>
+                  {loading && <p className="turn-card-hint">Loading song …</p>}
+                  {error && <p className="turn-card-error">{error}</p>}
+                  {!loading && !error && playbackBlocked && (
+                    <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
+                  )}
                 </>
               )}
 
@@ -165,12 +166,7 @@ export function TurnCard({
                   {loading && <p className="turn-card-hint">Loading song …</p>}
                   {error && <p className="turn-card-error">{error}</p>}
                   {!loading && !error && playbackBlocked && (
-                    <>
-                      <p className="turn-card-hint">Autoplay blocked</p>
-                      <button className="pill-btn primary" onClick={onManualPlay}>
-                        🔊 Play Sound
-                      </button>
-                    </>
+                    <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
                   )}
                   {!loading && !error && !playbackBlocked && (
                     <p className="turn-card-hint">Song is playing — place it below</p>
@@ -289,12 +285,10 @@ export function TurnCard({
                         })()}
 
                       {nowPlaying && playbackBlocked && (
-                        <button className="pill-btn primary" onClick={onManualPlay}>
-                          🔊 Play Sound
-                        </button>
+                        <p className="turn-card-hint">Autoplay blocked — tap ▶ above to start</p>
                       )}
 
-                      <button className="pill-btn primary" onClick={onNext}>
+                      <button className="pill-btn primary turn-card-next-btn" onClick={onNext}>
                         {nextLabel}
                       </button>
                     </>

@@ -24,7 +24,7 @@ export type GameAction =
   | { type: "DRAW_SONG"; song: Song | null }
   | { type: "PLACE_CARD"; index: number }
   | { type: "REVEAL"; yearGuess: number | null; artistGuess: string; genreGuess: Genre | null }
-  | { type: "NEXT_TURN" }
+  | { type: "NEXT_TURN"; song: Song | null }
   | { type: "RESET" };
 
 export function pickRandomSong(usedIds: string[]): Song | null {
@@ -143,11 +143,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         nextIndex = (nextIndex + 1) % state.players.length;
         guard++;
       }
+      // The next song is picked by the caller (GameScreen) and passed in
+      // here so the very same click that advances the turn can also start
+      // playback synchronously — going straight to "listening" instead of
+      // a separate "ready" gate that would need its own button/gesture.
+      const song = action.song;
       return {
         ...state,
         currentPlayerIndex: nextIndex,
-        turnPhase: "ready",
-        currentSong: null,
+        turnPhase: song ? "listening" : "ready",
+        currentSong: song,
+        usedSongIds: song ? [...state.usedSongIds, song.id] : state.usedSongIds,
         pendingPlacementIndex: null,
       };
     }

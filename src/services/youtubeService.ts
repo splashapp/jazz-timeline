@@ -25,10 +25,12 @@ declare global {
 }
 
 interface YouTubePlayer {
+  cueVideoById(videoId: string): void;
   loadVideoById(videoId: string): void;
   playVideo(): void;
   pauseVideo(): void;
   stopVideo(): void;
+  destroy(): void;
 }
 
 const YT_STATE_PLAYING = 1;
@@ -36,9 +38,10 @@ const YT_STATE_PLAYING = 1;
 // iOS Safari blocks autoplay unless playVideo() is triggered directly by a
 // user gesture. Because loadAndPlay() awaits a network search first, the
 // gesture context is lost by the time playVideo() runs, so playback silently
-// fails to start. This timeout detects that case so the UI can offer a
-// manual "tap to play" fallback that calls play() synchronously.
+// fails to start. This timeout detects that case so the service can retry
+// (see playVideoId) instead of leaving a song silently not playing.
 const PLAYBACK_BLOCKED_TIMEOUT_MS = 1200;
+const MAX_AUTO_RETRIES = 2;
 
 let apiLoadPromise: Promise<void> | null = null;
 
@@ -69,6 +72,7 @@ export class YouTubeMusicService implements MusicService {
   private blockedTimer: number | null = null;
   private playStateCb: ((isPlaying: boolean) => void) | null = null;
   private errorCb: (() => void) | null = null;
+  private destroyed = false;
 
   constructor(containerId: string) {
     this.containerId = containerId;
@@ -109,6 +113,13 @@ export class YouTubeMusicService implements MusicService {
     if (this.initPromise) return this.initPromise;
     this.initPromise = (async () => {
       await loadYouTubeApi();
+      // Loading the iframe API script is a real network round-trip, so a
+      // destroy() (e.g. React StrictMode's dev-mode double-invoke cleanup)
+      // can land while we're still waiting for it — bail out before
+      // creating a player that would target a DOM node another instance
+      // may already be using, instead of just destroying a player that
+      // doesn't exist yet.
+      if (this.destroyed) return;
       await new Promise<void>((resolve) => {
         this.player = new window.YT!.Player(this.containerId, {
           height: "0",
@@ -147,17 +158,43 @@ export class YouTubeMusicService implements MusicService {
     return data.items?.[0]?.id?.videoId ?? null;
   }
 
+  // Loads a video without playing it, so it's already buffered by the time
+  // an actual play is triggered — called ahead of time (while a song is
+  // merely prefetched) rather than waiting for the play moment to start
+  // loading from scratch.
+  cueVideoId(videoId: string): void {
+    this.player?.cueVideoById(videoId);
+  }
+
   // Synchronous on purpose: this must be callable directly from a click
   // handler (no awaits before it) so iOS Safari treats it as a genuine
   // user-gesture-triggered play, e.g. for a cached/prefetched video id.
   playVideoId(videoId: string): void {
     if (!this.player) return;
+    // Reset whatever was previously loaded/playing before starting the new
+    // one, so there's no chance of the old and new videos briefly overlapping.
+    this.player.stopVideo();
     this.player.loadVideoById(videoId);
     this.player.playVideo();
+    this.armBlockedTimer(0);
+  }
 
+  // If playback hasn't reached the PLAYING state within the timeout, retry
+  // playVideo() a couple of times (covers transient buffering/init hiccups)
+  // before finally reporting "blocked" — which on iOS usually means the
+  // original call happened without a live user gesture and no amount of
+  // retrying will fix it, but the other failure modes do recover this way.
+  // Any newer playVideoId()/stop() call clears this timer first, so a stale
+  // retry can never fire for a video that's no longer the current one.
+  private armBlockedTimer(attempt: number): void {
     this.clearBlockedTimer();
     this.blockedTimer = window.setTimeout(() => {
-      this.blockedCb?.(true);
+      if (attempt < MAX_AUTO_RETRIES) {
+        this.player?.playVideo();
+        this.armBlockedTimer(attempt + 1);
+      } else {
+        this.blockedCb?.(true);
+      }
     }, PLAYBACK_BLOCKED_TIMEOUT_MS);
   }
 
@@ -184,5 +221,17 @@ export class YouTubeMusicService implements MusicService {
     this.blockedCb?.(false);
     this.playStateCb?.(false);
     this.player?.stopVideo();
+  }
+
+  // Tears down the underlying iframe/player entirely. Needed because React
+  // StrictMode double-invokes effects in dev (mount -> cleanup -> mount) —
+  // without this, the first "mount" could leave behind a player instance
+  // still racing to initialize against the same DOM node as the second,
+  // and one of them would never fire onReady, hanging init() forever.
+  destroy(): void {
+    this.destroyed = true;
+    this.clearBlockedTimer();
+    this.player?.destroy();
+    this.player = null;
   }
 }
