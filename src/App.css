@@ -127,6 +127,13 @@ h2 {
   -webkit-text-fill-color: var(--cream);
 }
 
+/* Hidden entirely while the select is disabled (today: always, since only
+   one deck exists) — no dropdown affordance to hint at until there's
+   actually more than one option to pick from. */
+.deck-select:disabled ~ .deck-select-chevron {
+  display: none;
+}
+
 .deck-select-chevron {
   position: absolute;
   right: 0;
@@ -343,23 +350,6 @@ button:disabled {
 .splash-poster {
   display: block;
   width: 100%;
-  /* Navy shadows / taupe highlights (see #duotone-navy-taupe above) — the
-     gradient map alone determines the color; no contrast/saturate stacked
-     on top, so the two anchor colors stay exactly on-brand instead of
-     drifting toward a third, unintended hue. */
-  filter: url(#duotone-navy-taupe);
-}
-
-/* Same noise texture as the page background (body::before) reused at
-   higher opacity directly on the poster, so it reads as a deliberately
-   printed/postered element rather than a clean glossy photo. */
-.splash-poster-grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.22;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .splash-credit {

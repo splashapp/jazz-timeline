@@ -11,34 +11,6 @@ interface Props {
 export function SplashScreen({ onSolo, onMultiplayer, mockMode, onToggleMock }: Props) {
   return (
     <div className="screen splash-screen">
-      {/* Navy->taupe duotone filter for the poster photo below: recolors
-          shadows to --bg-navy and highlights to --taupe so a realistic
-          photo reads in the same flat, graphic color language as the
-          vinyl/line-icon illustrations elsewhere, instead of sitting next
-          to them as a second, photographic design system. Visually
-          hidden — only exists to be referenced via filter: url(#...). */}
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
-        {/* SVG filters default to linearRGB color-interpolation, which
-            distorts these sRGB anchor fractions into a lighter, desaturated
-            periwinkle instead of true navy/taupe — color-interpolation-
-            filters="sRGB" is required for the table values below to land
-            on the actual hex colors they're derived from. */}
-        <filter id="duotone-navy-taupe" colorInterpolationFilters="sRGB">
-          <feColorMatrix
-            type="matrix"
-            values="0.2126 0.7152 0.0722 0 0
-                    0.2126 0.7152 0.0722 0 0
-                    0.2126 0.7152 0.0722 0 0
-                    0 0 0 1 0"
-            result="gray"
-          />
-          <feComponentTransfer in="gray">
-            <feFuncR type="table" tableValues="0.1020 0.6118" />
-            <feFuncG type="table" tableValues="0.1451 0.5098" />
-            <feFuncB type="table" tableValues="0.2784 0.4078" />
-          </feComponentTransfer>
-        </filter>
-      </svg>
       <h1 className="brand-title">Jazz Timeline</h1>
       <div className="splash-poster-frame">
         {/* Echoes the vinyl's concentric grooves (.vinyl background) as a
@@ -47,7 +19,6 @@ export function SplashScreen({ onSolo, onMultiplayer, mockMode, onToggleMock }: 
         <div className="splash-poster-rings" aria-hidden="true" />
         <div className="splash-poster-clip">
           <img className="splash-poster" src={posterImage} alt="Jazz Timeline poster" />
-          <div className="splash-poster-grain" aria-hidden="true" />
         </div>
       </div>
       <p className="splash-credit">by Alex Rueß</p>
