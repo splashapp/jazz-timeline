@@ -36,6 +36,11 @@
 
 * {
   box-sizing: border-box;
+  /* Kill WebKit's default tap-highlight overlay everywhere — it washes
+     out genre-colored surfaces (timeline cards) with a flat tint on tap.
+     No replacement highlight is added; :focus-visible still covers
+     keyboard accessibility separately. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {

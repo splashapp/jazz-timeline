@@ -355,6 +355,27 @@ button:disabled {
   padding-bottom: 16px;
 }
 
+/* Mobile: pull the whole stack (header, card, timeline, score) up toward
+   the top edge instead of leaving it centered/low with .screen's default
+   32px top padding — that space is better spent on the timeline/score
+   fitting without scrolling. Desktop/wide viewports keep the more
+   centered default padding. */
+@media (max-width: 600px) {
+  .game-screen {
+    padding-top: 20px;
+  }
+}
+
+/* Short phone viewports (e.g. iPhone SE) additionally tighten the rhythm
+   between header/card/timeline/score so the Next button and score stay
+   visible with less (or no) scrolling. */
+@media (max-height: 700px) {
+  .game-screen {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+}
+
 .yt-hidden {
   width: 0;
   height: 0;
@@ -919,7 +940,17 @@ button:disabled {
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
-.timeline-card-playable:hover,
+/* Hover lift/gold-border is a mouse-only affordance: gated behind
+   (hover: hover) so touch taps never trigger it — WebKit can otherwise
+   apply :hover on tap and leave it "stuck", overriding the genre-colored
+   border with gold until the next tap elsewhere. */
+@media (hover: hover) {
+  .timeline-card-playable:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+  }
+}
+
 .timeline-card-playable:focus-visible {
   border-color: var(--gold);
   transform: translateY(-2px);
