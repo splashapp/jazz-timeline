@@ -1,4 +1,4 @@
-import posterImage from "../assets/Title_Alex_01.png";
+import posterImage from "../assets/davinci_a_poster_style_illustrated_portrait_composition_fe.png";
 import { DECKS } from "../data/decks";
 
 interface Props {
@@ -17,9 +17,12 @@ export function SplashScreen({ onSolo, onMultiplayer, mockMode, onToggleMock }: 
             recurring motif, bracketing the splash screen visually to the
             turntable/card screens that follow. */}
         <div className="splash-poster-rings" aria-hidden="true" />
-        <div className="splash-poster-clip">
-          <img className="splash-poster" src={posterImage} alt="Jazz Timeline poster" />
-        </div>
+        {/* An unfilled, offset outline peeking out behind the photo — hints
+            "a stack of cards waiting here" and, since it shares the game
+            card's own corner radius, doubles as the "card corner" cue —
+            without boxing the photo into the same tight card frame. */}
+        <div className="splash-poster-stack" aria-hidden="true" />
+        <img className="splash-poster" src={posterImage} alt="Jazz Timeline poster" />
       </div>
       <p className="splash-credit">by Alex Rueß</p>
       {/* Deck picker, below the credit line at half the title's size —

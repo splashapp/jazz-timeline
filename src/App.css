@@ -308,7 +308,10 @@ button:disabled {
 .splash-poster-frame {
   position: relative;
   width: 100%;
-  max-width: 360px;
+  /* More generous than the game card's own max-width (306px + padding) —
+     the photo is allowed to breathe, not be pressed into the same
+     proportions. */
+  max-width: 380px;
   margin-top: 48px;
   display: flex;
   align-items: center;
@@ -334,22 +337,29 @@ button:disabled {
   z-index: 0;
 }
 
-/* Same corner radius, border and shadow treatment as .turn-card-face, so
-   the poster reads as a card in the same visual system as the game
-   screens rather than an isolated photo. */
-.splash-poster-clip {
-  position: relative;
-  z-index: 1;
-  width: 100%;
+/* Unfilled outline offset down-right behind the photo — suggests the next
+   card in a stack waiting underneath, and its rounded corners (matching
+   .turn-card-face) peek out as a "card corner" cue — without wrapping the
+   photo itself in a full matching card frame. */
+.splash-poster-stack {
+  position: absolute;
+  inset: 0;
+  margin: 10px -10px -10px 10px;
   border-radius: 32px;
-  overflow: hidden;
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-lift);
+  border: 1.5px solid rgba(156, 130, 104, 0.35);
+  z-index: 0;
 }
 
+/* Same corner radius and shadow depth as .turn-card-face — enough to read
+   as "part of the same card system" — but no filled card background/border
+   boxing the photo in; it sits freely on the page. */
 .splash-poster {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
+  border-radius: 32px;
+  box-shadow: var(--shadow-lift);
 }
 
 .splash-credit {
