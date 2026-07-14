@@ -4,26 +4,18 @@ import type { Genre } from "../types/game";
 
 interface Props {
   genreEnabled: boolean;
-  onSubmit: (yearGuess: number | null, artistGuess: string, genreGuess: Genre | null) => void;
+  onSubmit: (artistGuess: string, genreGuess: Genre | null) => void;
 }
 
+// The year guess no longer lives here — it's already set by the timeline's
+// press-and-drag year slider at the moment the card was placed.
 export function GuessForm({ genreEnabled, onSubmit }: Props) {
-  const [year, setYear] = useState("");
   const [artist, setArtist] = useState("");
   const [genre, setGenre] = useState<Genre | "">("");
 
   return (
     <div className="guess-form">
       <p className="hint">Bonus points for guessing (optional):</p>
-      <label className="field">
-        Release Year
-        <input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          placeholder="e.g. 1959"
-        />
-      </label>
       <label className="field">
         Artist / Composer (Last Name)
         <input
@@ -48,9 +40,7 @@ export function GuessForm({ genreEnabled, onSubmit }: Props) {
       )}
       <button
         className="pill-btn primary"
-        onClick={() =>
-          onSubmit(year ? Number(year) : null, artist, genreEnabled ? genre || null : null)
-        }
+        onClick={() => onSubmit(artist, genreEnabled ? genre || null : null)}
       >
         Reveal
       </button>

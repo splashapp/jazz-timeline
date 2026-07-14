@@ -73,4 +73,8 @@ export interface GameState {
   turnPhase: TurnPhase;
   currentSong: Song | null;
   pendingPlacementIndex: number | null;
+  // Set directly from the timeline's press-and-drag year slider at the
+  // moment a placement is made — the guess dialog no longer asks for the
+  // year separately.
+  pendingYearGuess: number | null;
 }

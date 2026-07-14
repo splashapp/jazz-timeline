@@ -45,7 +45,7 @@ export function GameScreen({ state, dispatch, music }: Props) {
           <Timeline
             timeline={currentPlayer.timeline}
             placementMode
-            onPlace={(index) => dispatch({ type: "PLACE_CARD", index })}
+            onPlace={(index, yearGuess) => dispatch({ type: "PLACE_CARD", index, yearGuess })}
           />
         ) : (
           <Timeline
@@ -80,8 +80,8 @@ export function GameScreen({ state, dispatch, music }: Props) {
         <div className="guess-sheet-backdrop">
           <GuessForm
             genreEnabled={state.genreFeatureEnabled}
-            onSubmit={(yearGuess, artistGuess, genreGuess) =>
-              dispatch({ type: "REVEAL", yearGuess, artistGuess, genreGuess })
+            onSubmit={(artistGuess, genreGuess) =>
+              dispatch({ type: "REVEAL", artistGuess, genreGuess })
             }
           />
         </div>

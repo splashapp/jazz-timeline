@@ -3,6 +3,14 @@ import songsData from "../data/songs.json";
 
 const ALL_SONGS = songsData as Song[];
 
+// Fallback bounds for the timeline's year slider when a placement slot has
+// no neighbor on one side (the very start/end of the timeline) — grounded
+// in the actual dataset's range rather than an arbitrary round number.
+export const SONG_YEAR_RANGE = {
+  min: Math.min(...ALL_SONGS.map((s) => s.year)),
+  max: Math.max(...ALL_SONGS.map((s) => s.year)),
+};
+
 export function createInitialState(): GameState {
   return {
     phase: "setup-media",
@@ -15,14 +23,15 @@ export function createInitialState(): GameState {
     turnPhase: "ready",
     currentSong: null,
     pendingPlacementIndex: null,
+    pendingYearGuess: null,
   };
 }
 
 export type GameAction =
   | { type: "SET_GENRE_FEATURE"; enabled: boolean }
   | { type: "START_GAME"; mediaService: MediaService; playerNames: string[] }
-  | { type: "PLACE_CARD"; index: number }
-  | { type: "REVEAL"; yearGuess: number | null; artistGuess: string; genreGuess: Genre | null }
+  | { type: "PLACE_CARD"; index: number; yearGuess: number }
+  | { type: "REVEAL"; artistGuess: string; genreGuess: Genre | null }
   | { type: "NEXT_TURN" }
   | { type: "RESET" };
 
@@ -77,11 +86,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnPhase: "listening",
         currentSong: song,
         pendingPlacementIndex: null,
+        pendingYearGuess: null,
       };
     }
 
     case "PLACE_CARD":
-      return { ...state, pendingPlacementIndex: action.index, turnPhase: "guessing" };
+      return {
+        ...state,
+        pendingPlacementIndex: action.index,
+        pendingYearGuess: action.yearGuess,
+        turnPhase: "guessing",
+      };
 
     case "REVEAL": {
       if (!state.currentSong || state.pendingPlacementIndex === null) return state;
@@ -90,9 +105,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const player = { ...players[state.currentPlayerIndex] };
       const timeline = [...player.timeline];
       const index = state.pendingPlacementIndex;
+      const yearGuess = state.pendingYearGuess;
 
       const correctPlacement = isPlacementCorrect(timeline, index, song.year);
-      const correctYear = action.yearGuess !== null && action.yearGuess === song.year;
+      const correctYear = yearGuess !== null && yearGuess === song.year;
       const correctArtist = matchesLastName(action.artistGuess, song.artistLastName);
       const correctGenre = state.genreFeatureEnabled ? action.genreGuess === song.genre : null;
 
@@ -102,7 +118,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         correctYear,
         correctArtist,
         correctGenre,
-        yearGuess: action.yearGuess,
+        yearGuess,
         artistGuess: action.artistGuess,
         genreGuess: action.genreGuess,
       };
@@ -120,7 +136,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       player.score += points;
       players[state.currentPlayerIndex] = player;
 
-      return { ...state, players, turnPhase: "revealed" };
+      return { ...state, players, turnPhase: "revealed", pendingYearGuess: null };
     }
 
     case "NEXT_TURN": {
@@ -148,6 +164,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentSong: song,
         usedSongIds: [...state.usedSongIds, song.id],
         pendingPlacementIndex: null,
+        pendingYearGuess: null,
       };
     }
 
