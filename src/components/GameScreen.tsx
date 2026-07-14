@@ -1,8 +1,8 @@
+import { useState } from "react";
 import type { GameState } from "../types/game";
 import type { GameAction } from "../state/gameReducer";
 import type { useMusicPlayback } from "../hooks/useMusicPlayback";
 import { Timeline } from "./Timeline";
-import { GuessForm } from "./GuessForm";
 import { TurnCard } from "./TurnCard";
 
 interface Props {
@@ -13,6 +13,11 @@ interface Props {
 
 export function GameScreen({ state, dispatch, music }: Props) {
   const currentPlayer = state.players[state.currentPlayerIndex];
+  // Live preview of the year slider's current value while it's being
+  // dragged — non-null exactly while dragging, so the turn card can flip
+  // and show it immediately on press rather than waiting for the drag to
+  // actually commit a placement.
+  const [dragYear, setDragYear] = useState<number | null>(null);
   if (!currentPlayer) return null;
   const isSolo = state.players.length === 1;
 
@@ -32,6 +37,7 @@ export function GameScreen({ state, dispatch, music }: Props) {
         error={music.error}
         nowPlaying={music.nowPlaying}
         isPlaying={music.isPlaying}
+        dragYear={dragYear}
         onPlaySong={music.handlePlaySong}
         onTogglePlay={music.handleTogglePlay}
         onNext={music.handleNext}
@@ -45,7 +51,11 @@ export function GameScreen({ state, dispatch, music }: Props) {
           <Timeline
             timeline={currentPlayer.timeline}
             placementMode
-            onPlace={(index, yearGuess) => dispatch({ type: "PLACE_CARD", index, yearGuess })}
+            onDragUpdate={setDragYear}
+            onPlace={(index, yearGuess) => {
+              setDragYear(null);
+              dispatch({ type: "PLACE_CARD", index, yearGuess });
+            }}
           />
         ) : (
           <Timeline
@@ -73,17 +83,6 @@ export function GameScreen({ state, dispatch, music }: Props) {
               </span>
             </div>
           ))}
-        </div>
-      )}
-
-      {state.turnPhase === "guessing" && (
-        <div className="guess-sheet-backdrop">
-          <GuessForm
-            genreEnabled={state.genreFeatureEnabled}
-            onSubmit={(artistGuess, genreGuess) =>
-              dispatch({ type: "REVEAL", artistGuess, genreGuess })
-            }
-          />
         </div>
       )}
     </div>

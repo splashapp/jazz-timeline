@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Song, PlacedCard, TurnPhase } from "../types/game";
 import { genreColorStyle } from "../utils/genreColors";
 import { InfoModal } from "./InfoModal";
@@ -25,6 +25,10 @@ interface Props {
   error: string | null;
   nowPlaying: Song | null;
   isPlaying: boolean;
+  // Non-null exactly while the timeline's year slider is being dragged —
+  // drives the early flip + live year preview, before any placement has
+  // actually been committed.
+  dragYear: number | null;
   onPlaySong: () => void;
   onTogglePlay: () => void;
   onNext: () => void;
@@ -42,6 +46,7 @@ export function TurnCard({
   error,
   nowPlaying,
   isPlaying,
+  dragYear,
   onPlaySong,
   onTogglePlay,
   onNext,
@@ -51,19 +56,14 @@ export function TurnCard({
 }: Props) {
   // Reflects the actual player state — the needle only drops once audio is
   // genuinely playing, whether that's the current turn's song, still
-  // playing through "guessing"/"revealed", or a replayed song from the
-  // timeline.
+  // playing through to "revealed", or a replayed song from the timeline.
   const spinning = isPlaying;
-  const flipped = turnPhase === "revealed";
-
-  // Hidden by default: seeing your own guessed text next to a green "+1"
-  // imprints your guess rather than the correct answer (already shown as
-  // the big year/artist/genre badge). Tapping the table reveals it on
-  // request instead. Resets so each new reveal starts collapsed again.
-  const [showGuesses, setShowGuesses] = useState(false);
-  useEffect(() => {
-    setShowGuesses(false);
-  }, [placedCard]);
+  // The card flips the instant the year slider is pressed (dragYear goes
+  // non-null), well before turnPhase itself changes — placement + exact
+  // year are scored the moment the slider is released, so there's no
+  // separate "guessing" gate to wait through anymore.
+  const placing = dragYear !== null;
+  const flipped = placing || turnPhase === "revealed";
 
   const [infoOpen, setInfoOpen] = useState(false);
 
@@ -89,7 +89,7 @@ export function TurnCard({
     document.fonts?.ready.then(measure);
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [turnPhase, currentSong, placedCard, nowPlaying, showGuesses, songReady, starting, error]);
+  }, [turnPhase, currentSong, placedCard, nowPlaying, songReady, starting, error, placing]);
 
   return (
     <div className="turn-card">
@@ -173,10 +173,6 @@ export function TurnCard({
                   )}
                 </>
               )}
-
-              {turnPhase === "guessing" && (
-                <p className="turn-card-hint">Almost there — want to guess?</p>
-              )}
             </div>
           </div>
 
@@ -185,6 +181,12 @@ export function TurnCard({
               {currentSong &&
                 (() => {
                   const displaySong = nowPlaying ?? currentSong;
+                  // While the slider is being dragged, show its live guess
+                  // instead of the real year — the moment it settles
+                  // (turnPhase moves past "listening"), the key change
+                  // below remounts this element and replays the reveal-pop
+                  // animation, landing on the true value.
+                  const cardYear = placing && dragYear !== null ? dragYear : displaySong.year;
                   return (
                     <>
                       {nowPlaying && <span className="eyebrow-tag replay-tag">🔊 Replaying</span>}
@@ -196,97 +198,49 @@ export function TurnCard({
                           <span className="genre-badge-icon" aria-hidden="true" />
                           {displaySong.genre}
                         </span>
-                        <div className="reveal-year">{displaySong.year}</div>
+                        <div className="reveal-year" key={placing ? "guess" : "true"}>
+                          {cardYear}
+                        </div>
                       </div>
-                      <h3
-                        className="reveal-artist"
-                        style={{ fontSize: artistFontSize(displaySong.artist) }}
-                      >
-                        {displaySong.artist}
-                      </h3>
-                      <p className="reveal-title">{displaySong.title}</p>
 
-                      {!nowPlaying &&
-                        placedCard &&
-                        (() => {
-                          const hasArtistGuess = placedCard.artistGuess.trim().length > 0;
-                          const valueClass = (hasValue: boolean, correct: boolean) =>
-                            correct ? "hit" : hasValue ? "filled" : "empty";
-                          // Collapsed: always "+1"/"—" by correctness, never the
-                          // guessed text (even when correct — the point is the
-                          // hit, not re-displaying what you typed). Expanded (on
-                          // tap): show what was actually guessed for each field.
-                          const cell = (hasValue: boolean, correct: boolean, text: string) =>
-                            showGuesses ? (
-                              <span className={`reveal-points-value ${valueClass(hasValue, correct)}`}>
-                                {hasValue ? text : "—"}
-                              </span>
-                            ) : (
-                              <span className={`reveal-points-value ${correct ? "hit" : "empty"}`}>
-                                {correct ? "+1" : "—"}
-                              </span>
-                            );
-                          const toggle = () => setShowGuesses((v) => !v);
-                          return (
-                            <div className="reveal-points-group">
-                              <ul
-                                className="reveal-points"
-                                onClick={toggle}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    toggle();
-                                  }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                aria-label={showGuesses ? "Hide your answers" : "Show your answers"}
-                              >
-                                <li>
-                                  <span className="reveal-points-label">Placement</span>
-                                  <span
-                                    className={`reveal-points-value ${placedCard.correctPlacement ? "hit" : "empty"}`}
-                                  >
-                                    {placedCard.correctPlacement ? "+1" : "—"}
-                                  </span>
-                                </li>
-                                <li>
-                                  <span className="reveal-points-label">Exact Year</span>
-                                  {cell(
-                                    placedCard.yearGuess !== null,
-                                    placedCard.correctYear,
-                                    String(placedCard.yearGuess),
-                                  )}
-                                </li>
-                                <li>
-                                  <span className="reveal-points-label">Artist</span>
-                                  {cell(
-                                    hasArtistGuess,
-                                    placedCard.correctArtist,
-                                    placedCard.artistGuess.trim(),
-                                  )}
-                                </li>
-                                {placedCard.correctGenre !== null && (
-                                  <li>
-                                    <span className="reveal-points-label">Genre</span>
-                                    {cell(
-                                      placedCard.genreGuess !== null,
-                                      placedCard.correctGenre,
-                                      placedCard.genreGuess ?? "",
-                                    )}
-                                  </li>
-                                )}
-                              </ul>
-                              <p className="reveal-points-hint">
-                                {showGuesses ? "Tap to hide your answers" : "Tap to see your answers"}
-                              </p>
-                            </div>
-                          );
-                        })()}
+                      {turnPhase === "revealed" && (
+                        <>
+                          <h3
+                            className="reveal-artist"
+                            style={{ fontSize: artistFontSize(displaySong.artist) }}
+                          >
+                            {displaySong.artist}
+                          </h3>
+                          <p className="reveal-title">{displaySong.title}</p>
+                        </>
+                      )}
 
-                      <button className="pill-btn primary turn-card-next-btn" onClick={onNext}>
-                        {nextLabel}
-                      </button>
+                      {turnPhase === "revealed" && !nowPlaying && placedCard && (
+                        <ul className="reveal-points">
+                          <li>
+                            <span className="reveal-points-label">Placement</span>
+                            <span
+                              className={`reveal-points-value ${placedCard.correctPlacement ? "hit" : "empty"}`}
+                            >
+                              {placedCard.correctPlacement ? "+1" : "—"}
+                            </span>
+                          </li>
+                          <li>
+                            <span className="reveal-points-label">Exact Year</span>
+                            <span
+                              className={`reveal-points-value ${placedCard.correctYear ? "hit" : "empty"}`}
+                            >
+                              {placedCard.correctYear ? "+1" : "—"}
+                            </span>
+                          </li>
+                        </ul>
+                      )}
+
+                      {turnPhase === "revealed" && (
+                        <button className="pill-btn primary turn-card-next-btn" onClick={onNext}>
+                          {nextLabel}
+                        </button>
+                      )}
                     </>
                   );
                 })()}

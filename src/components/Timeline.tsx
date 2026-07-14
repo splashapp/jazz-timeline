@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import type { PlacedCard, Song } from "../types/game";
 import { genreColorStyle } from "../utils/genreColors";
 import { SONG_YEAR_RANGE } from "../state/gameReducer";
@@ -7,6 +8,10 @@ interface Props {
   timeline: PlacedCard[];
   placementMode: boolean;
   onPlace?: (index: number, yearGuess: number) => void;
+  // Fired continuously while dragging (including the very first frame, at
+  // the picker's starting midpoint) — lets the turn card flip immediately
+  // on press and show a live-updating year that matches the slider.
+  onDragUpdate?: (year: number) => void;
   onCardClick?: (song: Song) => void;
 }
 
@@ -14,7 +19,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Props) {
+export function Timeline({ timeline, placementMode, onPlace, onDragUpdate, onCardClick }: Props) {
   const slots = timeline.length + 1;
 
   // The slot currently being dragged, its year bounds (derived from the
@@ -23,6 +28,9 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [activeBounds, setActiveBounds] = useState<{ min: number; max: number } | null>(null);
   const [activeYear, setActiveYear] = useState<number | null>(null);
+  // The picker's own on-screen position, captured once at drag-start —
+  // used to position the portaled overlay below via fixed coordinates.
+  const [activeRect, setActiveRect] = useState<DOMRect | null>(null);
 
   if (timeline.length === 0 && !placementMode) {
     return <p className="empty-timeline">No cards placed yet.</p>;
@@ -44,17 +52,22 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
     const bounds = boundsFor(index);
     setActiveIndex(index);
     setActiveBounds(bounds);
+    setActiveRect(e.currentTarget.getBoundingClientRect());
     // The element is still its small, un-expanded size at this exact
     // instant (the "active" re-render hasn't painted yet), so start at the
     // midpoint rather than trying to map this initial position — every
     // subsequent pointermove (after the wider track has rendered) maps the
     // pointer's real position to a year.
-    setActiveYear(Math.round((bounds.min + bounds.max) / 2));
+    const startYear = Math.round((bounds.min + bounds.max) / 2);
+    setActiveYear(startYear);
+    onDragUpdate?.(startYear);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (activeIndex === null || !activeBounds) return;
-    setActiveYear(yearFromPointer(e.clientX, e.currentTarget, activeBounds.min, activeBounds.max));
+    const year = yearFromPointer(e.clientX, e.currentTarget, activeBounds.min, activeBounds.max);
+    setActiveYear(year);
+    onDragUpdate?.(year);
   };
 
   const commit = () => {
@@ -63,6 +76,7 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
     setActiveIndex(null);
     setActiveBounds(null);
     setActiveYear(null);
+    setActiveRect(null);
   };
 
   return (
@@ -102,24 +116,36 @@ export function Timeline({ timeline, placementMode, onPlace, onCardClick }: Prop
                   aria-valuemax={isActive ? activeBounds?.max : undefined}
                   aria-valuenow={isActive ? (activeYear ?? undefined) : undefined}
                 >
-                  {isActive ? (
-                    // Absolutely positioned over the (still small, in-flow)
-                    // picker box — the box itself never resizes in layout,
-                    // so it can never push later siblings around; only the
-                    // two neighbor cards' own translateX nudges (above)
-                    // create the visual room for this to sit in.
-                    <div className="year-picker-expanded">
-                      <span className="year-picker-value">{activeYear}</span>
-                      <div className="year-picker-track">
-                        <div className="year-picker-fill" style={{ width: `${fraction * 100}%` }} />
-                        <div className="year-picker-thumb" style={{ left: `${fraction * 100}%` }} />
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="year-picker-plus">+</span>
-                  )}
+                  {!isActive && <span className="year-picker-plus">+</span>}
                 </div>
               )}
+              {isActive &&
+                activeRect &&
+                // Portaled to <body>: .timeline scrolls horizontally
+                // (overflow-x:auto), and per the CSS overflow spec that
+                // forces the OTHER axis to compute as auto (clipping) even
+                // when explicitly set to visible — there's no way for this
+                // to escape vertically as a normal descendant. Fixed
+                // positioning computed from the picker's own on-screen
+                // rect sidesteps that entirely.
+                createPortal(
+                  <div
+                    className="year-picker-expanded"
+                    style={{
+                      position: "fixed",
+                      left: activeRect.left + activeRect.width / 2,
+                      top: activeRect.top - 18,
+                      transform: "translate(-50%, -100%)",
+                    }}
+                  >
+                    <span className="year-picker-value">{activeYear}</span>
+                    <div className="year-picker-track">
+                      <div className="year-picker-fill" style={{ width: `${fraction * 100}%` }} />
+                      <div className="year-picker-thumb" style={{ left: `${fraction * 100}%` }} />
+                    </div>
+                  </div>,
+                  document.body,
+                )}
               {i < timeline.length &&
                 (onCardClick ? (
                   <button

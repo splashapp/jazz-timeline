@@ -44,11 +44,7 @@ export interface PlacedCard {
   song: Song;
   correctPlacement: boolean;
   correctYear: boolean;
-  correctArtist: boolean;
-  correctGenre: boolean | null;
   yearGuess: number | null;
-  artistGuess: string;
-  genreGuess: Genre | null;
 }
 
 export interface Player {
@@ -60,21 +56,19 @@ export interface Player {
 
 export type GamePhase = "setup-media" | "playing" | "finished";
 
-export type TurnPhase = "ready" | "listening" | "guessing" | "revealed";
+// The year slider's placement + release already tells you everything you
+// need to score a turn (placement + exact year) — there's no separate
+// "guessing" gate/dialog anymore, so a turn goes straight from "listening"
+// to "revealed" the moment the slider is released.
+export type TurnPhase = "ready" | "listening" | "revealed";
 
 export interface GameState {
   phase: GamePhase;
   mediaService: MediaService | null;
-  genreFeatureEnabled: boolean;
   players: Player[];
   currentPlayerIndex: number;
   usedSongIds: string[];
   roundsPerPlayer: number;
   turnPhase: TurnPhase;
   currentSong: Song | null;
-  pendingPlacementIndex: number | null;
-  // Set directly from the timeline's press-and-drag year slider at the
-  // moment a placement is made — the guess dialog no longer asks for the
-  // year separately.
-  pendingYearGuess: number | null;
 }
