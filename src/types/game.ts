@@ -38,13 +38,21 @@ export interface Song {
   genre: Genre;
   searchQuery: string;
   videoId?: string;
+  // Short, curated one-sentence fact shown after the reveal. Left undefined
+  // for songs where no reliably-verified fact was found — never guessed.
+  context?: string;
 }
+
+export type JokerType = "year" | "artist";
 
 export interface PlacedCard {
   song: Song;
   correctPlacement: boolean;
   correctYear: boolean;
   yearGuess: number | null;
+  jokerUsed: JokerType | null;
+  artistGuess: string | null;
+  correctArtist: boolean | null;
 }
 
 export interface Player {
@@ -52,15 +60,21 @@ export interface Player {
   name: string;
   timeline: PlacedCard[];
   score: number;
+  jokersRemaining: number;
 }
 
 export type GamePhase = "setup-media" | "playing" | "finished";
 
-// The year slider's placement + release already tells you everything you
-// need to score a turn (placement + exact year) — there's no separate
-// "guessing" gate/dialog anymore, so a turn goes straight from "listening"
-// to "revealed" the moment the slider is released.
-export type TurnPhase = "ready" | "listening" | "revealed";
+// A turn now moves through distinct, separately-committed steps rather than
+// one combined gesture. Grabbing and dragging the card across the timeline
+// to choose a gap happens entirely as local UI/pointer state (no reducer
+// phase needed for that continuous gesture) while still "listening"; only
+// once it's released does the turn move to a full-width year corridor
+// slider for the exact year ("guessing-year"), then an optional joker
+// risk/reward step (only reachable when the corridor was wide enough to
+// make guessing meaningful and the player still has jokers left), before
+// the actual reveal.
+export type TurnPhase = "ready" | "listening" | "guessing-year" | "joker" | "revealed";
 
 export interface GameState {
   phase: GamePhase;
@@ -71,4 +85,10 @@ export interface GameState {
   roundsPerPlayer: number;
   turnPhase: TurnPhase;
   currentSong: Song | null;
+  // The gap index locked in during "placing", carried through
+  // "guessing-year"/"joker" until the turn is finalized.
+  pendingPlacementIndex: number | null;
+  // The year committed during "guessing-year", carried through "joker"
+  // until the turn is finalized.
+  pendingYearGuess: number | null;
 }

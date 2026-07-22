@@ -543,6 +543,40 @@ button:disabled {
   flex-direction: column;
 }
 
+/* Scene 2 — invites the grab once the song is actually playing and nothing
+   has been picked up yet. Reuses pulse-invite (defined near the timeline
+   gap marker below) rather than a bespoke keyframe. */
+.turn-card.grabbable .turn-card-face.front {
+  animation: pulse-invite 1.8s ease-in-out infinite;
+}
+
+.turn-card.grabbable .turn-card-face.front,
+.turn-card.dragging .turn-card-face.front {
+  touch-action: none;
+  cursor: grab;
+}
+
+/* While dragging, the card is repositioned via an inline transform (see
+   useCardPlacementDrag) rather than pulled out of flow — no portal/fixed-
+   position bookkeeping needed, and siblings below never reflow. */
+.turn-card.dragging {
+  z-index: 100;
+  cursor: grabbing;
+  transition: none;
+}
+
+.turn-card.dragging .turn-card-face {
+  box-shadow: var(--shadow-lift), 0 30px 60px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Third card state (Scenes 3–8): locked in but not yet truth — dashed gold
+   border instead of the neutral glass border, genre badge still visible on
+   the back (irrelevant here, front only) once flipped at the real reveal. */
+.turn-card-face.front.pending {
+  border-style: dashed;
+  border-color: var(--gold);
+}
+
 /* A real, reserved-height block — not an absolute overlay — so the flip
    card below it (.turn-card-flip-area) can NEVER be positioned underneath
    or collide with it, regardless of face content or font-size changes. */
@@ -1049,9 +1083,285 @@ button:disabled {
   opacity: 0.8;
 }
 
+/* A wrong joker bet costs points outright, not just the missed bonus —
+   reads as clearly negative (--miss), distinct from "empty" (--muted). */
+.reveal-points-value.penalty {
+  color: var(--miss);
+}
+
 .replay-tag {
   color: var(--gold-soft);
   border-color: var(--gold);
+}
+
+/* Scene 11 — one curated fact line, passive to read, with a quiet "i" pull
+   for anyone who wants a beat more (SongInfoModal). */
+.reveal-context {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  display: flex;
+  align-items: center;
+  padding: 10px 34px 10px 14px;
+  border-radius: 14px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+}
+
+.reveal-context-text {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--gold-soft);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.reveal-context-info-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-style: normal;
+  text-transform: lowercase;
+  color: var(--muted);
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.reveal-context-info-btn:hover {
+  color: var(--taupe-soft);
+  border-color: var(--taupe);
+}
+
+/* ---------- year corridor (Scene 7) ---------- */
+
+.year-corridor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px 20px;
+  border-radius: 20px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  animation: fade-up 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.year-corridor-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.year-corridor-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(245, 240, 232, 0.2);
+  touch-action: none;
+}
+
+.year-corridor-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--taupe);
+}
+
+.year-corridor-thumb {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cream);
+  border: 3px solid var(--taupe);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.year-corridor-labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- joker dialog (Scene 8) ---------- */
+
+.joker-dialog {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 20px;
+  border-radius: 20px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  animation: fade-up 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.joker-dialog-header {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.joker-options {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.joker-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 10px;
+  border-radius: 16px;
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--taupe);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease;
+}
+
+.joker-option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+.joker-option:disabled {
+  opacity: 0.4;
+  border-color: var(--glass-border);
+}
+
+.joker-option-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.joker-option-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold-soft);
+}
+
+.joker-dialog-skip,
+.joker-dialog-back {
+  font-size: 13px;
+}
+
+.joker-artist-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.joker-artist-option {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--cream);
+  font-size: 14px;
+  text-align: left;
+  transition: border-color 0.18s ease;
+}
+
+.joker-artist-option:hover {
+  border-color: var(--gold);
+}
+
+/* ---------- handoff screen (Scene 12) ---------- */
+
+.handoff-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 10, 20, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: backdrop-in 0.3s ease both;
+}
+
+.handoff-screen {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 36px 26px;
+  border-radius: 28px;
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lift);
+  text-align: center;
+  animation: modal-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.handoff-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+.handoff-name {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--gold-soft);
+}
+
+.handoff-preview-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.handoff-preview-card {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.handoff-continue-btn {
+  margin-top: 6px;
 }
 
 /* ---------- timeline (bottom horizontal scroll-snap) ---------- */
@@ -1102,50 +1412,8 @@ button:disabled {
   scroll-snap-align: center;
 }
 
-/* Press-and-drag year picker — replaces the old plain "+" insert button.
-   The box itself never resizes (stays a small dashed circle in normal
-   flex flow at all times, active or not) so it can never push later
-   timeline slots around; the expanded slider control is an absolutely
-   positioned overlay (.year-picker-expanded) on top of it instead, and the
-   two neighbor cards get their own translateX nudge (see .timeline-card--
-   shift-left/-right) to visually part around it. */
-.year-picker {
-  position: relative;
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px dashed var(--taupe);
-  color: var(--taupe-soft);
-  background: var(--glass-fill);
-  font-size: 16px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.18s ease;
-  animation: pulse-invite 1.8s ease-in-out infinite;
-  touch-action: none;
-  user-select: none;
-  /* Comfortably above .timeline-card (given an explicit low z-index below)
-     so the expanded slider overlay — which lives inside this stacking
-     context — is never painted underneath a neighboring card. */
-  z-index: 50;
-}
-
-.year-picker.active {
-  animation: none;
-  border-style: solid;
-}
-
-.year-picker:active {
-  transform: scale(0.88);
-}
-
-.year-picker-plus {
-  pointer-events: none;
-}
-
+/* Reused by .turn-card.grabbable (Scene 2's "ready to grab" invite) and
+   the timeline gap marker below. */
 @keyframes pulse-invite {
   0%,
   100% {
@@ -1156,70 +1424,52 @@ button:disabled {
   }
 }
 
-/* Positioning (position/left/top/transform) is set inline in Timeline.tsx
-   from the picker's measured on-screen rect — it's portaled to <body>, so
-   it isn't clipped by .timeline's horizontal-scroll overflow. Only visual
-   styling lives here. */
-.year-picker-expanded {
-  width: 200px;
-  max-width: 66vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px 12px;
-  border-radius: 20px;
-  background: var(--glass-fill-strong);
-  border: 1px solid var(--taupe);
-  box-shadow: var(--shadow-lift);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  pointer-events: none;
-  /* Now a direct child of <body> (portaled) — comfortably above every
-     other fixed-position overlay in the app (guess sheet: 30, info modal: 40). */
-  z-index: 60;
-}
-
-.year-picker-value {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--cream);
-}
-
-.year-picker-track {
+/* Live glowing gap divider under the dragged card (Scene 4) — only ever
+   one rendered at a time, at whichever slot useCardPlacementDrag currently
+   reports as hovered. */
+.gap-marker {
   position: relative;
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(245, 240, 232, 0.2);
+  flex: 0 0 auto;
+  width: 14px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.year-picker-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
+.gap-marker-glow {
+  width: 3px;
+  height: 100%;
   border-radius: 999px;
-  background: var(--taupe);
+  background: var(--gold-soft);
+  box-shadow: 0 0 16px 4px rgba(224, 189, 82, 0.55);
+  animation: gap-glow-pulse 1s ease-in-out infinite;
 }
 
-.year-picker-thumb {
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--cream);
-  border: 2px solid var(--taupe);
-  transform: translate(-50%, -50%);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+@keyframes gap-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Slower, bouncier settle than the default 0.2s transform transition —
+   applied only to the card animating into its corrected chronological slot
+   (Scene 10), so the correction reads as a deliberate move rather than an
+   ordinary layout shift. */
+.timeline-card--settling {
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .timeline-card {
   position: relative;
   /* Explicit (rather than relying on backdrop-filter's implicit stacking
-     context at effective z-index 0) so the active year-picker's z-index:50
-     unambiguously wins the comparison instead of depending on browser-
-     specific stacking-context edge cases. */
+     context at effective z-index 0) so stacking order stays predictable
+     regardless of browser-specific stacking-context edge cases. */
   z-index: 1;
   flex: 0 0 auto;
   min-width: 108px;
@@ -1239,8 +1489,8 @@ button:disabled {
 }
 
 /* Visual-only nudge (doesn't touch layout/flex sizing) so the two cards
-   immediately adjacent to an active year-picker visibly part around it,
-   clearing room for .year-picker-expanded to sit in. */
+   immediately adjacent to the live gap marker (.gap-marker, above) visibly
+   part around it while a card is being dragged over that gap. */
 .timeline-card--shift-left {
   transform: translateX(-46px);
 }

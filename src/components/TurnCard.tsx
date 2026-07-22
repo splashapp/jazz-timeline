@@ -1,7 +1,10 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Song, PlacedCard, TurnPhase } from "../types/game";
 import { genreColorStyle } from "../utils/genreColors";
 import { InfoModal } from "./InfoModal";
+import { SongInfoModal } from "./SongInfoModal";
+import type { TimelineHandle } from "./Timeline";
+import { useCardPlacementDrag } from "../hooks/useCardPlacementDrag";
 
 // Long artist credits (e.g. "Christian Scott aTunde Adjuah") wrap to two
 // lines; step the font down so that second line still fits comfortably
@@ -16,6 +19,34 @@ function artistFontSize(name: string): string {
 // measured content height back into the height the flip area needs.
 const FACE_VERTICAL_PADDING = 24 + 28;
 
+const ODOMETER_DURATION_MS = 700;
+
+// Tweens the displayed year from the player's guess up/down to the true
+// release year once `active` flips true — the rolled distance makes the
+// size of the miss (or the thrill of a hit) physically felt, not just read.
+function useOdometer(target: number, start: number | null, active: boolean): number {
+  const [display, setDisplay] = useState(target);
+
+  useEffect(() => {
+    if (!active || start === null || start === target) {
+      setDisplay(target);
+      return;
+    }
+    let raf: number;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - t0) / ODOMETER_DURATION_MS, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(start + (target - start) * eased));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, start, target]);
+
+  return display;
+}
+
 interface Props {
   turnPhase: TurnPhase;
   currentSong: Song | null;
@@ -25,10 +56,9 @@ interface Props {
   error: string | null;
   nowPlaying: Song | null;
   isPlaying: boolean;
-  // Non-null exactly while the timeline's year slider is being dragged —
-  // drives the early flip + live year preview, before any placement has
-  // actually been committed.
-  dragYear: number | null;
+  timelineRef: React.RefObject<TimelineHandle | null>;
+  onCommitPlacement: (index: number) => void;
+  onHoverChange: (index: number | null) => void;
   onPlaySong: () => void;
   onTogglePlay: () => void;
   onNext: () => void;
@@ -46,7 +76,9 @@ export function TurnCard({
   error,
   nowPlaying,
   isPlaying,
-  dragYear,
+  timelineRef,
+  onCommitPlacement,
+  onHoverChange,
   onPlaySong,
   onTogglePlay,
   onNext,
@@ -58,14 +90,30 @@ export function TurnCard({
   // genuinely playing, whether that's the current turn's song, still
   // playing through to "revealed", or a replayed song from the timeline.
   const spinning = isPlaying;
-  // The card flips the instant the year slider is pressed (dragYear goes
-  // non-null), well before turnPhase itself changes — placement + exact
-  // year are scored the moment the slider is released, so there's no
-  // separate "guessing" gate to wait through anymore.
-  const placing = dragYear !== null;
-  const flipped = placing || turnPhase === "revealed";
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { dragging, cardTransform, startDrag } = useCardPlacementDrag({
+    timelineRef,
+    cardRef,
+    onCommit: onCommitPlacement,
+    onHoverChange,
+  });
+
+  // Invites the grab (Scene 2) only once the song is actually playing and
+  // nothing has been picked up yet.
+  const grabbable = turnPhase === "listening" && isPlaying && !dragging;
+  // Third card state: locked in but not yet truth (Scenes 3–8) — genre
+  // badge still shows, dashed border marks "draft, not yet revealed".
+  const pending = dragging || turnPhase === "guessing-year" || turnPhase === "joker";
+  // The actual flip only ever happens at the real reveal — no early peek.
+  const flipped = turnPhase === "revealed";
 
   const [infoOpen, setInfoOpen] = useState(false);
+  const [songInfoOpen, setSongInfoOpen] = useState(false);
+
+  const displaySong = nowPlaying ?? currentSong;
+  const revealActive = turnPhase === "revealed" && !nowPlaying;
+  const odometerYear = useOdometer(displaySong?.year ?? 0, placedCard?.yearGuess ?? null, revealActive);
 
   // Both faces are absolutely stacked (needed for the 3D flip), so neither
   // can grow the card via normal flow — a long 2-line artist name would
@@ -89,10 +137,14 @@ export function TurnCard({
     document.fonts?.ready.then(measure);
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [turnPhase, currentSong, placedCard, nowPlaying, songReady, starting, error, placing]);
+  }, [turnPhase, currentSong, placedCard, nowPlaying, songReady, starting, error]);
 
   return (
-    <div className="turn-card">
+    <div
+      className={`turn-card${dragging ? " dragging" : ""}${grabbable ? " grabbable" : ""}`}
+      ref={cardRef}
+      style={dragging && cardTransform ? { transform: cardTransform } : undefined}
+    >
       <div className="turn-card-topbar">
         <span className="turn-card-player">{playerName}</span>
         <div className="turn-card-topbar-right">
@@ -121,7 +173,10 @@ export function TurnCard({
           can never collide with it, regardless of face content height. */}
       <div className="turn-card-flip-area" style={{ minHeight: minFlipHeight }}>
         <div className={`turn-card-inner${flipped ? " is-flipped" : ""}`}>
-          <div className="turn-card-face front">
+          <div
+            className={`turn-card-face front${pending ? " pending" : ""}`}
+            onPointerDown={turnPhase === "listening" && isPlaying ? startDrag : undefined}
+          >
             {/* .turn-card-face-content uses margin:auto to center when it
                 fits and to fall back to top-aligned + scrollable when it
                 doesn't, instead of justify-content:center clipping equally
@@ -156,7 +211,7 @@ export function TurnCard({
                 <div className="vinyl-sheen" />
               </div>
 
-              {(turnPhase === "ready" || turnPhase === "listening") && (
+              {turnPhase === "ready" || turnPhase === "listening" ? (
                 <>
                   {error && <p className="turn-card-error">{error}</p>}
                   {!error && !songReady && <p className="turn-card-hint">Searching …</p>}
@@ -169,8 +224,15 @@ export function TurnCard({
                     <p className="turn-card-hint">Starting …</p>
                   )}
                   {!error && songReady && isPlaying && (
-                    <p className="turn-card-hint">Song is playing — place it below</p>
+                    <p className="turn-card-hint">Pick up the card and place it below</p>
                   )}
+                </>
+              ) : (
+                <>
+                  {turnPhase === "guessing-year" && (
+                    <p className="turn-card-hint">Dial in the exact year below</p>
+                  )}
+                  {turnPhase === "joker" && <p className="turn-card-hint">Risk a joker?</p>}
                 </>
               )}
             </div>
@@ -178,15 +240,9 @@ export function TurnCard({
 
           <div className="turn-card-face back">
             <div className="turn-card-face-content" ref={backContentRef}>
-              {currentSong &&
+              {displaySong &&
                 (() => {
-                  const displaySong = nowPlaying ?? currentSong;
-                  // While the slider is being dragged, show its live guess
-                  // instead of the real year — the moment it settles
-                  // (turnPhase moves past "listening"), the key change
-                  // below remounts this element and replays the reveal-pop
-                  // animation, landing on the true value.
-                  const cardYear = placing && dragYear !== null ? dragYear : displaySong.year;
+                  const cardYear = revealActive ? odometerYear : displaySong.year;
                   return (
                     <>
                       {nowPlaying && <span className="eyebrow-tag replay-tag">🔊 Replaying</span>}
@@ -198,7 +254,10 @@ export function TurnCard({
                           <span className="genre-badge-icon" aria-hidden="true" />
                           {displaySong.genre}
                         </span>
-                        <div className="reveal-year" key={placing ? "guess" : "true"}>
+                        <div
+                          className="reveal-year"
+                          key={turnPhase === "revealed" ? `revealed-${displaySong.id}` : "idle"}
+                        >
                           {cardYear}
                         </div>
                       </div>
@@ -216,24 +275,64 @@ export function TurnCard({
                       )}
 
                       {turnPhase === "revealed" && !nowPlaying && placedCard && (
-                        <ul className="reveal-points">
-                          <li>
-                            <span className="reveal-points-label">Placement</span>
-                            <span
-                              className={`reveal-points-value ${placedCard.correctPlacement ? "hit" : "empty"}`}
-                            >
-                              {placedCard.correctPlacement ? "+1" : "—"}
-                            </span>
-                          </li>
-                          <li>
-                            <span className="reveal-points-label">Exact Year</span>
-                            <span
-                              className={`reveal-points-value ${placedCard.correctYear ? "hit" : "empty"}`}
-                            >
-                              {placedCard.correctYear ? "+1" : "—"}
-                            </span>
-                          </li>
-                        </ul>
+                        <>
+                          <ul className="reveal-points">
+                            <li>
+                              <span className="reveal-points-label">Placement</span>
+                              <span
+                                className={`reveal-points-value ${placedCard.correctPlacement ? "hit" : "empty"}`}
+                              >
+                                {placedCard.correctPlacement ? "+1" : "—"}
+                              </span>
+                            </li>
+                            <li>
+                              <span className="reveal-points-label">
+                                Exact Year{placedCard.jokerUsed === "year" ? " (Joker ×2)" : ""}
+                              </span>
+                              <span
+                                className={`reveal-points-value ${
+                                  placedCard.correctYear
+                                    ? "hit"
+                                    : placedCard.jokerUsed === "year"
+                                      ? "penalty"
+                                      : "empty"
+                                }`}
+                              >
+                                {placedCard.correctYear
+                                  ? placedCard.jokerUsed === "year"
+                                    ? "+2"
+                                    : "+1"
+                                  : placedCard.jokerUsed === "year"
+                                    ? "−2"
+                                    : "—"}
+                              </span>
+                            </li>
+                            {placedCard.jokerUsed === "artist" && (
+                              <li>
+                                <span className="reveal-points-label">Artist (Joker)</span>
+                                <span
+                                  className={`reveal-points-value ${placedCard.correctArtist ? "hit" : "penalty"}`}
+                                >
+                                  {placedCard.correctArtist ? "+1" : "−2"}
+                                </span>
+                              </li>
+                            )}
+                          </ul>
+
+                          {displaySong.context && (
+                            <div className="reveal-context">
+                              <p className="reveal-context-text">“{displaySong.context}”</p>
+                              <button
+                                type="button"
+                                className="reveal-context-info-btn"
+                                onClick={() => setSongInfoOpen(true)}
+                                aria-label="More about this recording"
+                              >
+                                i
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {turnPhase === "revealed" && (
@@ -262,6 +361,9 @@ export function TurnCard({
         i
       </button>
       {infoOpen && <InfoModal onClose={() => setInfoOpen(false)} />}
+      {songInfoOpen && displaySong && (
+        <SongInfoModal song={displaySong} onClose={() => setSongInfoOpen(false)} />
+      )}
     </div>
   );
 }
